@@ -55,7 +55,6 @@ function DeadHub:Init()
     local Color_Accent = Color3.fromRGB(235, 35, 55)   -- Насыщенный красный
     local Color_Text = Color3.fromRGB(255, 255, 255)   -- Белый текст
     local Color_TextDim = Color3.fromRGB(140, 140, 150) -- Серый текст
-    local Color_Hover = Color3.fromRGB(42, 42, 48)     -- Серый цвет при наведении
 
     -- Создаем скрытый ScreenGui
     local ScreenGui = Instance.new("ScreenGui")
@@ -69,11 +68,10 @@ function DeadHub:Init()
     MainFrame.Size = UDim2.new(0, 720, 0, 450)
     MainFrame.Position = UDim2.new(0.5, -360, 0.5, -225)
     MainFrame.BackgroundColor3 = Color_BG
-    MainFrame.BorderSizePixel = 1
-    MainFrame.BorderColor3 = Color_Border
+    MainFrame.BorderSizePixel = 0 -- FIX: Убрана рамка пикселя во избежание сдвигов
     MainFrame.Parent = ScreenGui
 
-    -- Дополнительная тонкая внешняя обводка вокруг всего меню
+    -- Дополнительная внешняя обводка вокруг всего меню
     local MenuStroke = Instance.new("UIStroke")
     MenuStroke.Color = Color3.fromRGB(42, 42, 48)
     MenuStroke.Thickness = 1.2
@@ -108,7 +106,7 @@ function DeadHub:Init()
     Logo.TextYAlignment = Enum.TextYAlignment.Center
     Logo.Parent = Header
 
-    -- ПАНЕЛЬ ВКЛАДОК (Сверху в ряд, выравнена по центру)
+    -- ПАНЕЛЬ ВКЛАДОК (Сверху в ряд)
     local TabBar = Instance.new("Frame")
     TabBar.Name = getStealthName()
     TabBar.Size = UDim2.new(1, 0, 0, 32)
@@ -124,12 +122,25 @@ function DeadHub:Init()
     TabBarBottomLine.BorderSizePixel = 0
     TabBarBottomLine.Parent = MainFrame
 
+    -- FIX: ScrollingFrame для вкладок, чтобы они не выходили за края меню при большом количестве
+    local TabsScroll = Instance.new("ScrollingFrame")
+    TabsScroll.Name = getStealthName()
+    TabsScroll.Size = UDim2.new(1, -125, 1, 0) -- Оставляем 125px справа под Settings
+    TabsScroll.Position = UDim2.new(0, 5, 0, 0)
+    TabsScroll.BackgroundTransparency = 1
+    TabsScroll.BorderSizePixel = 0
+    TabsScroll.ScrollBarThickness = 0
+    TabsScroll.ScrollingDirection = Enum.ScrollingDirection.X
+    TabsScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+    TabsScroll.AutomaticCanvasSize = Enum.AutomaticSize.X
+    TabsScroll.Parent = TabBar
+
     local TabListLayout = Instance.new("UIListLayout")
-    TabListLayout.Parent = TabBar
+    TabListLayout.Parent = TabsScroll
     TabListLayout.FillDirection = Enum.FillDirection.Horizontal
     TabListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    TabListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center -- Центрирование табов
-    TabListLayout.Padding = UDim.new(0, 10)
+    TabListLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+    TabListLayout.Padding = UDim.new(0, 8)
 
     -- Контейнер для страниц контента
     local PageContainer = Instance.new("Frame")
@@ -173,15 +184,13 @@ function DeadHub:Init()
     end)
     trackConnection(inputBegan)
 
-    -- Функция скрытия/показа меню (на клавишу RightShift / Правый Шифт по просьбе пользователя)
+    -- Функция скрытия/показа меню (на клавишу RightShift)
     local isVisible = true
     local function toggleMenu()
         isVisible = not isVisible
         MainFrame.Visible = isVisible
     end
 
-    -- FIX: Обработка InputBegan НАПРЯМУЮ через UserInputService для обхода проблем с фокусом в Roblox!
-    -- Также RightShift проверяется корректно, независимо от processed, чтобы игрок всегда мог скрыть/показать чит в лобби
     local toggleKeyConnection = UserInputService.InputBegan:Connect(function(input, processed)
         if input.KeyCode == Enum.KeyCode.RightShift then
             toggleMenu()
@@ -192,15 +201,164 @@ function DeadHub:Init()
     -- Списки вкладок и страниц
     local activeTab = nil
 
+    -- NEW: Создание ПОСТОЯННОЙ вкладки Settings в правом углу
+    local SettingsBtn = Instance.new("TextButton")
+    SettingsBtn.Name = getStealthName()
+    SettingsBtn.Size = UDim2.new(0, 110, 1, 0)
+    SettingsBtn.Position = UDim2.new(1, -115, 0, 0)
+    SettingsBtn.BackgroundTransparency = 1
+    SettingsBtn.Text = ""
+    SettingsBtn.Parent = TabBar
+
+    local SettingsIcon = Instance.new("ImageLabel")
+    SettingsIcon.Name = getStealthName()
+    SettingsIcon.Size = UDim2.new(0, 14, 0, 14)
+    SettingsIcon.Position = UDim2.new(0, 8, 0.5, -7)
+    SettingsIcon.BackgroundTransparency = 1
+    SettingsIcon.Image = "rbxassetid://2161586634" -- Указанная иконка настроек
+    SettingsIcon.ImageColor3 = Color_TextDim
+    SettingsIcon.Parent = SettingsBtn
+
+    local SettingsLabel = Instance.new("TextLabel")
+    SettingsLabel.Name = getStealthName()
+    SettingsLabel.Size = UDim2.new(1, -28, 1, 0)
+    SettingsLabel.Position = UDim2.new(0, 26, 0, 0)
+    SettingsLabel.BackgroundTransparency = 1
+    SettingsLabel.Text = "Settings"
+    SettingsLabel.TextColor3 = Color_TextDim
+    SettingsLabel.TextSize = 11
+    SettingsLabel.Font = Enum.Font.GothamBold
+    SettingsLabel.TextXAlignment = Enum.TextXAlignment.Left
+    SettingsLabel.Parent = SettingsBtn
+
+    local SettingsIndicator = Instance.new("Frame")
+    SettingsIndicator.Size = UDim2.new(1, 0, 0, 2)
+    SettingsIndicator.Position = UDim2.new(0, 0, 1, -2)
+    SettingsIndicator.BackgroundColor3 = Color_Accent
+    SettingsIndicator.BorderSizePixel = 0
+    SettingsIndicator.Visible = false
+    SettingsIndicator.Parent = SettingsBtn
+
+    local SettingsPage = Instance.new("ScrollingFrame")
+    SettingsPage.Name = getStealthName()
+    SettingsPage.Size = UDim2.new(1, 0, 1, 0)
+    SettingsPage.BackgroundTransparency = 1
+    SettingsPage.BorderSizePixel = 0
+    SettingsPage.Visible = false
+    SettingsPage.ScrollBarThickness = 3
+    SettingsPage.ScrollBarImageColor3 = Color_Border
+    SettingsPage.ScrollingDirection = Enum.ScrollingDirection.Y -- Строго вертикальный скролл во избежание багов
+    SettingsPage.Parent = PageContainer
+
+    -- Колонки для SettingsPage
+    local sLeftColumn = Instance.new("Frame")
+    sLeftColumn.Name = getStealthName()
+    sLeftColumn.Size = UDim2.new(0.33, -6, 0, 0)
+    sLeftColumn.Position = UDim2.new(0, 0, 0, 0)
+    sLeftColumn.BackgroundTransparency = 1
+    sLeftColumn.Parent = SettingsPage
+
+    local sMiddleColumn = Instance.new("Frame")
+    sMiddleColumn.Name = getStealthName()
+    sMiddleColumn.Size = UDim2.new(0.33, -6, 0, 0)
+    sMiddleColumn.Position = UDim2.new(0.33, 5, 0, 0)
+    sMiddleColumn.BackgroundTransparency = 1
+    sMiddleColumn.Parent = SettingsPage
+
+    local sRightColumn = Instance.new("Frame")
+    sRightColumn.Name = getStealthName()
+    sRightColumn.Size = UDim2.new(0.34, -8, 0, 0)
+    sRightColumn.Position = UDim2.new(0.66, 10, 0, 0)
+    sRightColumn.BackgroundTransparency = 1
+    sRightColumn.Parent = SettingsPage
+
+    local sLeftList = Instance.new("UIListLayout")
+    sLeftList.Parent = sLeftColumn
+    sLeftList.SortOrder = Enum.SortOrder.LayoutOrder
+    sLeftList.Padding = UDim.new(0, 10)
+
+    local sMiddleList = Instance.new("UIListLayout")
+    sMiddleList.Parent = sMiddleColumn
+    sMiddleList.SortOrder = Enum.SortOrder.LayoutOrder
+    sMiddleList.Padding = UDim.new(0, 10)
+
+    local sRightList = Instance.new("UIListLayout")
+    sRightList.Parent = sRightColumn
+    sRightList.SortOrder = Enum.SortOrder.LayoutOrder
+    sRightList.Padding = UDim.new(0, 10)
+
+    local sDivLine1 = Instance.new("Frame")
+    sDivLine1.Name = getStealthName()
+    sDivLine1.Size = UDim2.new(0, 1, 1, 0)
+    sDivLine1.Position = UDim2.new(0.33, 2, 0, 0)
+    sDivLine1.BackgroundColor3 = Color_Border
+    sDivLine1.BorderSizePixel = 0
+    sDivLine1.Parent = SettingsPage
+
+    local sDivLine2 = Instance.new("Frame")
+    sDivLine2.Name = getStealthName()
+    sDivLine2.Size = UDim2.new(0, 1, 1, 0)
+    sDivLine2.Position = UDim2.new(0.66, 4, 0, 0)
+    sDivLine2.BackgroundColor3 = Color_Border
+    sDivLine2.BorderSizePixel = 0
+    sDivLine2.Parent = SettingsPage
+
+    local function updateSettingsCanvas()
+        local lh = sLeftList.AbsoluteContentSize.Y
+        local mh = sMiddleList.AbsoluteContentSize.Y
+        local rh = sRightList.AbsoluteContentSize.Y
+        local maxH = math.max(lh, mh, rh)
+        SettingsPage.CanvasSize = UDim2.new(0, 0, 0, maxH + 10)
+        sLeftColumn.Size = UDim2.new(0.33, -6, 0, lh)
+        sMiddleColumn.Size = UDim2.new(0.33, -6, 0, mh)
+        sRightColumn.Size = UDim2.new(0.34, -8, 0, rh)
+        sDivLine1.Size = UDim2.new(0, 1, 0, maxH)
+        sDivLine2.Size = UDim2.new(0, 1, 0, maxH)
+    end
+    sLeftList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateSettingsCanvas)
+    sMiddleList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateSettingsCanvas)
+    sRightList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateSettingsCanvas)
+
+    local settingsSelect = SettingsBtn.MouseButton1Click:Connect(function()
+        if activeTab then
+            activeTab.Label.TextColor3 = Color_TextDim
+            activeTab.Icon.ImageColor3 = Color_TextDim
+            activeTab.Indicator.Visible = false
+            activeTab.Page.Visible = false
+        end
+        SettingsLabel.TextColor3 = Color_Text
+        SettingsIcon.ImageColor3 = Color_Text
+        SettingsIndicator.Visible = true
+        SettingsPage.Visible = true
+        activeTab = {Btn = SettingsBtn, Label = SettingsLabel, Icon = SettingsIcon, Indicator = SettingsIndicator, Page = SettingsPage}
+    end)
+    trackConnection(settingsSelect)
+
+    local settingsHover = SettingsBtn.MouseEnter:Connect(function()
+        if activeTab and activeTab.Btn ~= SettingsBtn then
+            SettingsLabel.TextColor3 = Color_Text
+            SettingsIcon.ImageColor3 = Color_Text
+        end
+    end)
+    local settingsLeave = SettingsBtn.MouseLeave:Connect(function()
+        if activeTab and activeTab.Btn ~= SettingsBtn then
+            SettingsLabel.TextColor3 = Color_TextDim
+            SettingsIcon.ImageColor3 = Color_TextDim
+        end
+    end)
+    trackConnection(settingsHover)
+    trackConnection(settingsLeave)
+
+
     function UI:CreateTab(tabName)
         local TabBtn = Instance.new("TextButton")
         TabBtn.Name = getStealthName()
-        TabBtn.Size = UDim2.new(0, 115, 1, 0) -- Ширина таба с иконкой
+        TabBtn.Size = UDim2.new(0, 115, 1, 0)
         TabBtn.BackgroundTransparency = 1
         TabBtn.Text = ""
-        TabBtn.Parent = TabBar
+        TabBtn.Parent = TabsScroll
 
-        -- Иконка таба (Используются ресурсы из VoltEclipse)
+        -- Иконка таба
         local TabIcon = Instance.new("ImageLabel")
         TabIcon.Name = getStealthName()
         TabIcon.Size = UDim2.new(0, 14, 0, 14)
@@ -208,7 +366,7 @@ function DeadHub:Init()
         TabIcon.BackgroundTransparency = 1
         TabIcon.ImageColor3 = Color_TextDim
         
-        -- Автоматический выбор иконки по имени вкладки (с поддержкой всех иконок VoltEclipse)
+        -- Автоматический выбор иконки по имени вкладки
         local lowerName = tabName:lower()
         if lowerName:find("aim") or lowerName:find("combat") then
             TabIcon.Image = TabIcons.Combat
@@ -260,6 +418,7 @@ function DeadHub:Init()
         Page.Visible = false
         Page.ScrollBarThickness = 3
         Page.ScrollBarImageColor3 = Color_Border
+        Page.ScrollingDirection = Enum.ScrollingDirection.Y -- FIX: Строго вертикальный скролл во избежание багов смещения
         Page.Parent = PageContainer
 
         -- ТРИ КОЛОНКИ (ESP - WORLD - MISC)
@@ -392,11 +551,10 @@ function DeadHub:Init()
             WindowFrame.Name = getStealthName()
             WindowFrame.Size = UDim2.new(1, 0, 0, 40)
             WindowFrame.BackgroundColor3 = Color_Card
-            WindowFrame.BorderSizePixel = 1
-            WindowFrame.BorderColor3 = Color_Border
+            WindowFrame.BorderSizePixel = 0 -- FIX: Убрана рамка пикселя
             WindowFrame.Parent = targetColumn
 
-            -- Элегантная тонкая обводка для окон
+            -- Элегантная обводка для окон
             local WindowStroke = Instance.new("UIStroke")
             WindowStroke.Color = Color3.fromRGB(35, 35, 40)
             WindowStroke.Thickness = 1
@@ -434,7 +592,7 @@ function DeadHub:Init()
             ContentList.Padding = UDim.new(0, 6)
             ContentList.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
-            -- Авто-подстройка высоты секции под количество элементов
+            -- Авто-подстройка высоты секции
             local paddingOffset = 10
             ContentList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
                 WindowFrame.Size = UDim2.new(1, 0, 0, ContentList.AbsoluteContentSize.Y + 27 + paddingOffset)
@@ -470,8 +628,7 @@ function DeadHub:Init()
                 SquareBox.Size = UDim2.new(0, 16, 0, 16)
                 SquareBox.Position = UDim2.new(1, -16, 0.5, -8)
                 SquareBox.BackgroundColor3 = Color_BG
-                SquareBox.BorderSizePixel = 1
-                SquareBox.BorderColor3 = Color_Border
+                SquareBox.BorderSizePixel = 0 -- FIX: Убрана рамка пикселя
                 SquareBox.Text = ""
                 SquareBox.AutoButtonColor = false
                 SquareBox.Parent = ToggleWrapper
@@ -497,15 +654,17 @@ function DeadHub:Init()
                     callback(toggleState)
                 end
 
-                -- Ховер-эффект для кнопки Toggle (Подсветка рамки при наведении)
-                local boxHover = SquareBox.MouseEnter:Connect(function()
+                -- FIX: Ховер-эффект при наведении НА ВСЮ ФУНКЦИЮ (WRAPPER) подсвечивает текст и бокс красным
+                local wrapperHover = ToggleWrapper.MouseEnter:Connect(function()
                     ToggleBoxStroke.Color = Color_Accent
+                    ToggleLabel.TextColor3 = Color_Accent
                 end)
-                local boxLeave = SquareBox.MouseLeave:Connect(function()
+                local wrapperLeave = ToggleWrapper.MouseLeave:Connect(function()
                     ToggleBoxStroke.Color = Color3.fromRGB(38, 38, 44)
+                    ToggleLabel.TextColor3 = Color_Text
                 end)
-                trackConnection(boxHover)
-                trackConnection(boxLeave)
+                trackConnection(wrapperHover)
+                trackConnection(wrapperLeave)
 
                 local toggleClick = SquareBox.MouseButton1Click:Connect(function()
                     toggleState = not toggleState
@@ -522,8 +681,7 @@ function DeadHub:Init()
                 ButtonFrame.Name = getStealthName()
                 ButtonFrame.Size = UDim2.new(1, -20, 0, 24)
                 ButtonFrame.BackgroundColor3 = Color_BG
-                ButtonFrame.BorderSizePixel = 1
-                ButtonFrame.BorderColor3 = Color_Border
+                ButtonFrame.BorderSizePixel = 0 -- FIX: Убрана рамка пикселя
                 ButtonFrame.Parent = ContentFrame
 
                 -- Обводка для кнопок
@@ -542,10 +700,10 @@ function DeadHub:Init()
                 TextButton.Font = Enum.Font.GothamBold
                 TextButton.Parent = ButtonFrame
 
-                -- Ховер-эффект для Button (Подсветка текста и обводки при наведении)
+                -- Ховер-эффект подсвечивает текст и рамку красным при наведении
                 local btnHover = TextButton.MouseEnter:Connect(function()
                     ButtonStroke.Color = Color_Accent
-                    TextButton.TextColor3 = Color_Text
+                    TextButton.TextColor3 = Color_Accent
                 end)
                 local btnLeave = TextButton.MouseLeave:Connect(function()
                     ButtonStroke.Color = Color3.fromRGB(38, 38, 44)
@@ -590,8 +748,7 @@ function DeadHub:Init()
                 SliderBar.Size = UDim2.new(1, 0, 0, 18)
                 SliderBar.Position = UDim2.new(0, 0, 0, 20)
                 SliderBar.BackgroundColor3 = Color_BG
-                SliderBar.BorderSizePixel = 1
-                SliderBar.BorderColor3 = Color_Border
+                SliderBar.BorderSizePixel = 0 -- FIX: Убрана рамка пикселя
                 SliderBar.Text = ""
                 SliderBar.AutoButtonColor = false
                 SliderBar.Parent = SliderWrapper
@@ -602,7 +759,7 @@ function DeadHub:Init()
                 SliderStroke.Thickness = 1
                 SliderStroke.Parent = SliderBar
 
-                -- Заполняющая полоса (Квадратная)
+                -- Заполняющая полоса
                 local Fill = Instance.new("Frame")
                 Fill.Name = getStealthName()
                 Fill.Size = UDim2.new((sliderValue - min)/(max - min), 0, 1, 0)
@@ -623,12 +780,14 @@ function DeadHub:Init()
                 ValueLabel.TextYAlignment = Enum.TextYAlignment.Center
                 ValueLabel.Parent = SliderBar
 
-                -- Ховер-эффект для слайдера (Подсвечивает обводку)
-                local sliderHover = SliderBar.MouseEnter:Connect(function()
+                -- Ховер-эффект при наведении НА СЛАЙДЕР (WRAPPER) подсвечивает текст и обводку красным
+                local sliderHover = SliderWrapper.MouseEnter:Connect(function()
                     SliderStroke.Color = Color_Accent
+                    SliderLabel.TextColor3 = Color_Accent
                 end)
-                local sliderLeave = SliderBar.MouseLeave:Connect(function()
+                local sliderLeave = SliderWrapper.MouseLeave:Connect(function()
                     SliderStroke.Color = Color3.fromRGB(38, 38, 44)
+                    SliderLabel.TextColor3 = Color_Text
                 end)
                 trackConnection(sliderHover)
                 trackConnection(sliderLeave)
@@ -674,7 +833,7 @@ function DeadHub:Init()
         return TabAPI
     end
 
-    -- Уничтожение UI для сборщика мусора (getgc-bypass)
+    -- Уничтожение UI для сборщика мусора
     function UI:Destroy()
         for _, conn in ipairs(activeConnections) do
             if conn and conn.Connected then
