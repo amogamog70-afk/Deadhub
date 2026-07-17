@@ -37,8 +37,10 @@ local TabIcons = {
     Movement = "rbxassetid://136160678435000", 
     Visuals  = "rbxassetid://102976018150012", 
     Misc     = "rbxassetid://137382232901580", 
-    World    = "rbxassetid://122563205713088",
-    Default  = "rbxassetid://137382232901580"
+    World    = "rbxassetid://122563205713088", -- earth white
+    Auto     = "rbxassetid://102927017461693", -- loading v2
+    Guns     = "rbxassetid://84647432170503",  -- iconarma
+    Skins    = "rbxassetid://101708694952341"  -- Pencil Icon
 }
 
 -- Инициализация меню
@@ -53,6 +55,7 @@ function DeadHub:Init()
     local Color_Accent = Color3.fromRGB(235, 35, 55)   -- Насыщенный красный
     local Color_Text = Color3.fromRGB(255, 255, 255)   -- Белый текст
     local Color_TextDim = Color3.fromRGB(140, 140, 150) -- Серый текст
+    local Color_Hover = Color3.fromRGB(42, 42, 48)     -- Серый цвет при наведении
 
     -- Создаем скрытый ScreenGui
     local ScreenGui = Instance.new("ScreenGui")
@@ -70,9 +73,9 @@ function DeadHub:Init()
     MainFrame.BorderColor3 = Color_Border
     MainFrame.Parent = ScreenGui
 
-    -- Дополнительная тонкая внешняя обводка вокруг всего меню (по просьбе пользователя)
+    -- Дополнительная тонкая внешняя обводка вокруг всего меню
     local MenuStroke = Instance.new("UIStroke")
-    MenuStroke.Color = Color3.fromRGB(42, 42, 48) -- Более заметный серый оттенок для объема
+    MenuStroke.Color = Color3.fromRGB(42, 42, 48)
     MenuStroke.Thickness = 1.2
     MenuStroke.Parent = MainFrame
 
@@ -177,8 +180,10 @@ function DeadHub:Init()
         MainFrame.Visible = isVisible
     end
 
+    -- FIX: Обработка InputBegan НАПРЯМУЮ через UserInputService для обхода проблем с фокусом в Roblox!
+    -- Также RightShift проверяется корректно, независимо от processed, чтобы игрок всегда мог скрыть/показать чит в лобби
     local toggleKeyConnection = UserInputService.InputBegan:Connect(function(input, processed)
-        if not processed and input.KeyCode == Enum.KeyCode.RightShift then
+        if input.KeyCode == Enum.KeyCode.RightShift then
             toggleMenu()
         end
     end)
@@ -203,15 +208,22 @@ function DeadHub:Init()
         TabIcon.BackgroundTransparency = 1
         TabIcon.ImageColor3 = Color_TextDim
         
-        -- Автоматический выбор иконки по имени вкладки
-        if tabName:lower():find("aim") or tabName:lower():find("combat") then
+        -- Автоматический выбор иконки по имени вкладки (с поддержкой всех иконок VoltEclipse)
+        local lowerName = tabName:lower()
+        if lowerName:find("aim") or lowerName:find("combat") then
             TabIcon.Image = TabIcons.Combat
-        elseif tabName:lower():find("move") or tabName:lower():find("speed") or tabName:lower():find("fly") then
+        elseif lowerName:find("move") or lowerName:find("speed") or lowerName:find("fly") then
             TabIcon.Image = TabIcons.Movement
-        elseif tabName:lower():find("visual") or tabName:lower():find("esp") then
+        elseif lowerName:find("visual") or lowerName:find("esp") then
             TabIcon.Image = TabIcons.Visuals
-        elseif tabName:lower():find("world") then
+        elseif lowerName:find("world") then
             TabIcon.Image = TabIcons.World
+        elseif lowerName:find("auto") or lowerName:find("farm") or lowerName:find("fish") then
+            TabIcon.Image = TabIcons.Auto
+        elseif lowerName:find("gun") or lowerName:find("weapon") or lowerName:find("shoot") or lowerName:find("combat") then
+            TabIcon.Image = TabIcons.Guns
+        elseif lowerName:find("skin") or lowerName:find("paint") or lowerName:find("cosmetic") then
+            TabIcon.Image = TabIcons.Skins
         else
             TabIcon.Image = TabIcons.Misc
         end
@@ -325,6 +337,22 @@ function DeadHub:Init()
         MiddleList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateCanvasSize)
         RightList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateCanvasSize)
 
+        -- Эффект наведения на кнопки табов (Ховер-подсветка)
+        local hoverConnection = TabBtn.MouseEnter:Connect(function()
+            if activeTab and activeTab.Btn ~= TabBtn then
+                TabLabel.TextColor3 = Color_Text
+                TabIcon.ImageColor3 = Color_Text
+            end
+        end)
+        local leaveConnection = TabBtn.MouseLeave:Connect(function()
+            if activeTab and activeTab.Btn ~= TabBtn then
+                TabLabel.TextColor3 = Color_TextDim
+                TabIcon.ImageColor3 = Color_TextDim
+            end
+        end)
+        trackConnection(hoverConnection)
+        trackConnection(leaveConnection)
+
         local tabSelect = TabBtn.MouseButton1Click:Connect(function()
             if activeTab then
                 activeTab.Label.TextColor3 = Color_TextDim
@@ -368,9 +396,9 @@ function DeadHub:Init()
             WindowFrame.BorderColor3 = Color_Border
             WindowFrame.Parent = targetColumn
 
-            -- Элегантная тонкая обводка для окон (по просьбе пользователя)
+            -- Элегантная тонкая обводка для окон
             local WindowStroke = Instance.new("UIStroke")
-            WindowStroke.Color = Color3.fromRGB(35, 35, 40) -- Мягкий серый цвет для границ карточек
+            WindowStroke.Color = Color3.fromRGB(35, 35, 40)
             WindowStroke.Thickness = 1
             WindowStroke.Parent = WindowFrame
 
@@ -469,6 +497,16 @@ function DeadHub:Init()
                     callback(toggleState)
                 end
 
+                -- Ховер-эффект для кнопки Toggle (Подсветка рамки при наведении)
+                local boxHover = SquareBox.MouseEnter:Connect(function()
+                    ToggleBoxStroke.Color = Color_Accent
+                end)
+                local boxLeave = SquareBox.MouseLeave:Connect(function()
+                    ToggleBoxStroke.Color = Color3.fromRGB(38, 38, 44)
+                end)
+                trackConnection(boxHover)
+                trackConnection(boxLeave)
+
                 local toggleClick = SquareBox.MouseButton1Click:Connect(function()
                     toggleState = not toggleState
                     updateToggle()
@@ -503,6 +541,18 @@ function DeadHub:Init()
                 TextButton.TextSize = 11
                 TextButton.Font = Enum.Font.GothamBold
                 TextButton.Parent = ButtonFrame
+
+                -- Ховер-эффект для Button (Подсветка текста и обводки при наведении)
+                local btnHover = TextButton.MouseEnter:Connect(function()
+                    ButtonStroke.Color = Color_Accent
+                    TextButton.TextColor3 = Color_Text
+                end)
+                local btnLeave = TextButton.MouseLeave:Connect(function()
+                    ButtonStroke.Color = Color3.fromRGB(38, 38, 44)
+                    TextButton.TextColor3 = Color_TextDim
+                end)
+                trackConnection(btnHover)
+                trackConnection(btnLeave)
 
                 local btnClick = TextButton.MouseButton1Click:Connect(function()
                     TextButton.TextColor3 = Color_Text
@@ -572,6 +622,16 @@ function DeadHub:Init()
                 ValueLabel.TextXAlignment = Enum.TextXAlignment.Center
                 ValueLabel.TextYAlignment = Enum.TextYAlignment.Center
                 ValueLabel.Parent = SliderBar
+
+                -- Ховер-эффект для слайдера (Подсвечивает обводку)
+                local sliderHover = SliderBar.MouseEnter:Connect(function()
+                    SliderStroke.Color = Color_Accent
+                end)
+                local sliderLeave = SliderBar.MouseLeave:Connect(function()
+                    SliderStroke.Color = Color3.fromRGB(38, 38, 44)
+                end)
+                trackConnection(sliderHover)
+                trackConnection(sliderLeave)
 
                 local function updateSlider(input)
                     local pos = math.clamp((input.Position.X - SliderBar.AbsolutePosition.X) / SliderBar.AbsoluteSize.X, 0, 1)
