@@ -50,11 +50,11 @@ function DeadHub:Init()
     ScreenGui.ResetOnSpawn = false
     ScreenGui.Parent = parentContainer
 
-    -- Главный фрейм (Сделан крупнее и шире по просьбе пользователя)
+    -- Главный фрейм (Сделан еще больше и шире под 3 колонки: 720x450)
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = getStealthName()
-    MainFrame.Size = UDim2.new(0, 680, 0, 440) -- Увеличенный размер: 680x440
-    MainFrame.Position = UDim2.new(0.5, -340, 0.5, -220)
+    MainFrame.Size = UDim2.new(0, 720, 0, 450) -- 3 колонки вмещаются идеально
+    MainFrame.Position = UDim2.new(0.5, -360, 0.5, -225)
     MainFrame.BackgroundColor3 = Color_BG
     MainFrame.BorderSizePixel = 1
     MainFrame.BorderColor3 = Color_Border
@@ -75,32 +75,23 @@ function DeadHub:Init()
     HeaderBottomLine.BorderSizePixel = 0
     HeaderBottomLine.Parent = Header
 
-    -- Логотип/Заголовок (С красивым современным шрифтом GothamBold)
+    -- Логотип/Заголовок (Спозиционирован ПО ЦЕНТРУ по просьбе пользователя)
     local Logo = Instance.new("TextLabel")
     Logo.Name = getStealthName()
-    Logo.Size = UDim2.new(0, 150, 1, 0)
-    Logo.Position = UDim2.new(0, 15, 0, 0)
+    Logo.Size = UDim2.new(1, 0, 1, 0)
+    Logo.Position = UDim2.new(0, 0, 0, 0)
     Logo.BackgroundTransparency = 1
     Logo.Text = "DEADHUB"
     Logo.TextColor3 = Color_Accent
     Logo.TextSize = 13
     Logo.Font = Enum.Font.GothamBold
-    Logo.TextXAlignment = Enum.TextXAlignment.Left
+    Logo.TextXAlignment = Enum.TextXAlignment.Center -- Выравнивание по центру
+    Logo.TextYAlignment = Enum.TextYAlignment.Center
     Logo.Parent = Header
 
-    -- Кнопка закрытия меню
-    local CloseBtn = Instance.new("TextButton")
-    CloseBtn.Name = getStealthName()
-    CloseBtn.Size = UDim2.new(0, 30, 0, 30)
-    CloseBtn.Position = UDim2.new(1, -35, 0.5, -15)
-    CloseBtn.BackgroundTransparency = 1
-    CloseBtn.Text = "X"
-    CloseBtn.TextColor3 = Color_TextDim
-    CloseBtn.TextSize = 12
-    CloseBtn.Font = Enum.Font.GothamBold
-    CloseBtn.Parent = Header
+    -- Кнопка закрытия ("Хрестик") УДАЛЕНА для беспалевности и минимализма. Скрытие меню на клавишу Insert.
 
-    -- ПАНЕЛЬ ВКЛАДОК (Сверху в ряд от левого до правого края)
+    -- ПАНЕЛЬ ВКЛАДОК (Сверху в ряд, выравнена по центру)
     local TabBar = Instance.new("Frame")
     TabBar.Name = getStealthName()
     TabBar.Size = UDim2.new(1, 0, 0, 32)
@@ -109,7 +100,6 @@ function DeadHub:Init()
     TabBar.BorderSizePixel = 0
     TabBar.Parent = MainFrame
 
-    -- FIX: Линия границы табов перенесена в MainFrame, чтобы она не считалась элементом UIListLayout и не сдвигала табы вправо!
     local TabBarBottomLine = Instance.new("Frame")
     TabBarBottomLine.Size = UDim2.new(1, 0, 0, 1)
     TabBarBottomLine.Position = UDim2.new(0, 0, 0, 67)
@@ -121,7 +111,8 @@ function DeadHub:Init()
     TabListLayout.Parent = TabBar
     TabListLayout.FillDirection = Enum.FillDirection.Horizontal
     TabListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    TabListLayout.Padding = UDim.new(0, 0)
+    TabListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center -- Центрирование табов
+    TabListLayout.Padding = UDim.new(0, 15) -- Небольшой отступ между табами
 
     -- Контейнер для страниц контента
     local PageContainer = Instance.new("Frame")
@@ -179,23 +170,18 @@ function DeadHub:Init()
     end)
     trackConnection(toggleKeyConnection)
 
-    local closeClick = CloseBtn.MouseButton1Click:Connect(function()
-        toggleMenu()
-    end)
-    trackConnection(closeClick)
-
     -- Списки вкладок и страниц
     local activeTab = nil
 
     function UI:CreateTab(tabName)
         local TabBtn = Instance.new("TextButton")
         TabBtn.Name = getStealthName()
-        TabBtn.Size = UDim2.new(0, 110, 1, 0)
+        TabBtn.Size = UDim2.new(0, 100, 1, 0) -- Ширина таба
         TabBtn.BackgroundTransparency = 1
         TabBtn.Text = tabName
         TabBtn.TextColor3 = Color_TextDim
         TabBtn.TextSize = 11
-        TabBtn.Font = Enum.Font.GothamBold -- Современный шрифт
+        TabBtn.Font = Enum.Font.GothamBold
         TabBtn.BorderSizePixel = 0
         TabBtn.Parent = TabBar
 
@@ -219,18 +205,25 @@ function DeadHub:Init()
         Page.ScrollBarImageColor3 = Color_Border
         Page.Parent = PageContainer
 
-        -- NEW: Двухколоночный макет внутри страницы для разделения на отделы (например, ESP слева, World справа)
+        -- ТРИ КОЛОНКИ (ESP - WORLD - MISC / Секции side-by-side)
         local LeftColumn = Instance.new("Frame")
         LeftColumn.Name = getStealthName()
-        LeftColumn.Size = UDim2.new(0.5, -6, 0, 0)
+        LeftColumn.Size = UDim2.new(0.33, -6, 0, 0)
         LeftColumn.Position = UDim2.new(0, 0, 0, 0)
         LeftColumn.BackgroundTransparency = 1
         LeftColumn.Parent = Page
 
+        local MiddleColumn = Instance.new("Frame")
+        MiddleColumn.Name = getStealthName()
+        MiddleColumn.Size = UDim2.new(0.33, -6, 0, 0)
+        MiddleColumn.Position = UDim2.new(0.33, 5, 0, 0)
+        MiddleColumn.BackgroundTransparency = 1
+        MiddleColumn.Parent = Page
+
         local RightColumn = Instance.new("Frame")
         RightColumn.Name = getStealthName()
-        RightColumn.Size = UDim2.new(0.5, -6, 0, 0)
-        RightColumn.Position = UDim2.new(0.5, 6, 0, 0)
+        RightColumn.Size = UDim2.new(0.34, -8, 0, 0)
+        RightColumn.Position = UDim2.new(0.66, 10, 0, 0)
         RightColumn.BackgroundTransparency = 1
         RightColumn.Parent = Page
 
@@ -239,22 +232,52 @@ function DeadHub:Init()
         LeftList.SortOrder = Enum.SortOrder.LayoutOrder
         LeftList.Padding = UDim.new(0, 10)
 
+        local MiddleList = Instance.new("UIListLayout")
+        MiddleList.Parent = MiddleColumn
+        MiddleList.SortOrder = Enum.SortOrder.LayoutOrder
+        MiddleList.Padding = UDim.new(0, 10)
+
         local RightList = Instance.new("UIListLayout")
         RightList.Parent = RightColumn
         RightList.SortOrder = Enum.SortOrder.LayoutOrder
         RightList.Padding = UDim.new(0, 10)
 
-        -- Функция авто-подстройки высоты Canvas под самую длинную колонку
+        -- Вертикальные разделительные линии между колонками (Уникальный стиль)
+        local DivLine1 = Instance.new("Frame")
+        DivLine1.Name = getStealthName()
+        DivLine1.Size = UDim2.new(0, 1, 1, 0)
+        DivLine1.Position = UDim2.new(0.33, 2, 0, 0)
+        DivLine1.BackgroundColor3 = Color_Border
+        DivLine1.BorderSizePixel = 0
+        DivLine1.Parent = Page
+
+        local DivLine2 = Instance.new("Frame")
+        DivLine2.Name = getStealthName()
+        DivLine2.Size = UDim2.new(0, 1, 1, 0)
+        DivLine2.Position = UDim2.new(0.66, 4, 0, 0)
+        DivLine2.BackgroundColor3 = Color_Border
+        DivLine2.BorderSizePixel = 0
+        DivLine2.Parent = Page
+
+        -- Функция авто-подстройки высоты Canvas и разделительных линий под самую длинную колонку
         local function updateCanvasSize()
             local leftHeight = LeftList.AbsoluteContentSize.Y
+            local middleHeight = MiddleList.AbsoluteContentSize.Y
             local rightHeight = RightList.AbsoluteContentSize.Y
-            local maxHeight = math.max(leftHeight, rightHeight)
+            local maxHeight = math.max(leftHeight, middleHeight, rightHeight)
+            
             Page.CanvasSize = UDim2.new(0, 0, 0, maxHeight + 10)
-            LeftColumn.Size = UDim2.new(0.5, -6, 0, leftHeight)
-            RightColumn.Size = UDim2.new(0.5, -6, 0, rightHeight)
+            
+            LeftColumn.Size = UDim2.new(0.33, -6, 0, leftHeight)
+            MiddleColumn.Size = UDim2.new(0.33, -6, 0, middleHeight)
+            RightColumn.Size = UDim2.new(0.34, -8, 0, rightHeight)
+            
+            DivLine1.Size = UDim2.new(0, 1, 0, maxHeight)
+            DivLine2.Size = UDim2.new(0, 1, 0, maxHeight)
         end
 
         LeftList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateCanvasSize)
+        MiddleList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateCanvasSize)
         RightList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateCanvasSize)
 
         local tabSelect = TabBtn.MouseButton1Click:Connect(function()
@@ -281,16 +304,18 @@ function DeadHub:Init()
         local TabAPI = {}
 
         -- 2. СОЗДАНИЕ ОКОН (СЕКЦИЙ) ВО ВКЛАДКАХ
-        -- Параметр column указывает, в какую колонку поместить окно ("Left" или "Right" / по умолчанию "Left")
+        -- column: "Left" (1), "Middle" (2), "Right" (3). По умолчанию "Left".
         function TabAPI:CreateWindow(windowTitle, column)
             local targetColumn = LeftColumn
-            if column == "Right" or column == "right" or column == 2 or column == "World" or column == "World" then
+            if column == "Middle" or column == "middle" or column == 2 or column == "Center" then
+                targetColumn = MiddleColumn
+            elseif column == "Right" or column == "right" or column == 3 or column == "Settings" then
                 targetColumn = RightColumn
             end
 
             local WindowFrame = Instance.new("Frame")
             WindowFrame.Name = getStealthName()
-            WindowFrame.Size = UDim2.new(1, 0, 0, 40) -- Ширина на всю колонку
+            WindowFrame.Size = UDim2.new(1, 0, 0, 40)
             WindowFrame.BackgroundColor3 = Color_Card
             WindowFrame.BorderSizePixel = 1
             WindowFrame.BorderColor3 = Color_Border
@@ -304,7 +329,7 @@ function DeadHub:Init()
             WindowTitleLabel.Text = windowTitle:upper()
             WindowTitleLabel.TextColor3 = Color_Accent
             WindowTitleLabel.TextSize = 10
-            WindowTitleLabel.Font = Enum.Font.GothamBold -- Современный шрифт
+            WindowTitleLabel.Font = Enum.Font.GothamBold
             WindowTitleLabel.TextXAlignment = Enum.TextXAlignment.Left
             WindowTitleLabel.Parent = WindowFrame
 
@@ -328,7 +353,7 @@ function DeadHub:Init()
             ContentList.Padding = UDim.new(0, 6)
             ContentList.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
-            -- Авто-подстройка высоты секции
+            -- Авто-подстройка высоты секции под количество элементов
             local paddingOffset = 10
             ContentList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
                 WindowFrame.Size = UDim2.new(1, 0, 0, ContentList.AbsoluteContentSize.Y + 27 + paddingOffset)
@@ -354,7 +379,7 @@ function DeadHub:Init()
                 ToggleLabel.Text = toggleText
                 ToggleLabel.TextColor3 = Color_Text
                 ToggleLabel.TextSize = 12
-                ToggleLabel.Font = Enum.Font.Gotham -- Современный шрифт
+                ToggleLabel.Font = Enum.Font.Gotham
                 ToggleLabel.TextXAlignment = Enum.TextXAlignment.Left
                 ToggleLabel.Parent = ToggleWrapper
 
@@ -411,7 +436,7 @@ function DeadHub:Init()
                 TextButton.Text = btnText
                 TextButton.TextColor3 = Color_TextDim
                 TextButton.TextSize = 11
-                TextButton.Font = Enum.Font.GothamBold -- Современный шрифт
+                TextButton.Font = Enum.Font.GothamBold
                 TextButton.Parent = ButtonFrame
 
                 local btnClick = TextButton.MouseButton1Click:Connect(function()
@@ -440,7 +465,7 @@ function DeadHub:Init()
                 SliderLabel.Text = sliderText
                 SliderLabel.TextColor3 = Color_Text
                 SliderLabel.TextSize = 12
-                SliderLabel.Font = Enum.Font.Gotham -- Современный шрифт
+                SliderLabel.Font = Enum.Font.Gotham
                 SliderLabel.TextXAlignment = Enum.TextXAlignment.Left
                 SliderLabel.Parent = SliderWrapper
 
@@ -464,7 +489,7 @@ function DeadHub:Init()
                 Fill.BorderSizePixel = 0
                 Fill.Parent = SliderBar
 
-                -- ЗНАЧЕНИЕ СЛАЙДЕРА (Строго по центру внутри слайдера с красивым шрифтом)
+                -- ЗНАЧЕНИЕ СЛАЙДЕРА (Строго по центру внутри слайдера)
                 local ValueLabel = Instance.new("TextLabel")
                 ValueLabel.Name = getStealthName()
                 ValueLabel.Size = UDim2.new(1, 0, 1, 0)
@@ -472,7 +497,7 @@ function DeadHub:Init()
                 ValueLabel.Text = tostring(sliderValue)
                 ValueLabel.TextColor3 = Color_Text
                 ValueLabel.TextSize = 11
-                ValueLabel.Font = Enum.Font.GothamBold -- Современный шрифт
+                ValueLabel.Font = Enum.Font.GothamBold
                 ValueLabel.TextXAlignment = Enum.TextXAlignment.Center
                 ValueLabel.TextYAlignment = Enum.TextYAlignment.Center
                 ValueLabel.Parent = SliderBar
