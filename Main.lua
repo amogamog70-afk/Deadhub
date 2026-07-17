@@ -31,11 +31,21 @@ local function trackConnection(connection)
     return connection
 end
 
+-- Ссылки на текстурные иконки табов из нашего прошлого проекта VoltEclipse
+local TabIcons = {
+    Combat   = "rbxassetid://12614416478",      
+    Movement = "rbxassetid://136160678435000", 
+    Visuals  = "rbxassetid://102976018150012", 
+    Misc     = "rbxassetid://137382232901580", 
+    World    = "rbxassetid://122563205713088",
+    Default  = "rbxassetid://137382232901580"
+}
+
 -- Инициализация меню
 function DeadHub:Init()
     local UI = {}
     
-    -- Основные цвета (Красно-Черная палитра)
+    -- Основные цвета (Красно-Черная палитра с обводками)
     local Color_BG = Color3.fromRGB(10, 10, 12)       -- Глубокий черный
     local Color_Card = Color3.fromRGB(15, 15, 18)     -- Черно-серый для окон/карточек
     local Color_Header = Color3.fromRGB(13, 13, 15)   -- Цвет шапки и табов
@@ -50,15 +60,21 @@ function DeadHub:Init()
     ScreenGui.ResetOnSpawn = false
     ScreenGui.Parent = parentContainer
 
-    -- Главный фрейм (Сделан еще больше и шире под 3 колонки: 720x450)
+    -- Главный фрейм (720x450)
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = getStealthName()
-    MainFrame.Size = UDim2.new(0, 720, 0, 450) -- 3 колонки вмещаются идеально
+    MainFrame.Size = UDim2.new(0, 720, 0, 450)
     MainFrame.Position = UDim2.new(0.5, -360, 0.5, -225)
     MainFrame.BackgroundColor3 = Color_BG
     MainFrame.BorderSizePixel = 1
     MainFrame.BorderColor3 = Color_Border
     MainFrame.Parent = ScreenGui
+
+    -- Дополнительная тонкая внешняя обводка вокруг всего меню (по просьбе пользователя)
+    local MenuStroke = Instance.new("UIStroke")
+    MenuStroke.Color = Color3.fromRGB(42, 42, 48) -- Более заметный серый оттенок для объема
+    MenuStroke.Thickness = 1.2
+    MenuStroke.Parent = MainFrame
 
     -- Шапка меню (Header)
     local Header = Instance.new("Frame")
@@ -75,7 +91,7 @@ function DeadHub:Init()
     HeaderBottomLine.BorderSizePixel = 0
     HeaderBottomLine.Parent = Header
 
-    -- Логотип/Заголовок (Спозиционирован ПО ЦЕНТРУ по просьбе пользователя)
+    -- Логотип/Заголовок (Строго по центру)
     local Logo = Instance.new("TextLabel")
     Logo.Name = getStealthName()
     Logo.Size = UDim2.new(1, 0, 1, 0)
@@ -85,11 +101,9 @@ function DeadHub:Init()
     Logo.TextColor3 = Color_Accent
     Logo.TextSize = 13
     Logo.Font = Enum.Font.GothamBold
-    Logo.TextXAlignment = Enum.TextXAlignment.Center -- Выравнивание по центру
+    Logo.TextXAlignment = Enum.TextXAlignment.Center
     Logo.TextYAlignment = Enum.TextYAlignment.Center
     Logo.Parent = Header
-
-    -- Кнопка закрытия ("Хрестик") УДАЛЕНА для беспалевности и минимализма. Скрытие меню на клавишу Insert.
 
     -- ПАНЕЛЬ ВКЛАДОК (Сверху в ряд, выравнена по центру)
     local TabBar = Instance.new("Frame")
@@ -112,7 +126,7 @@ function DeadHub:Init()
     TabListLayout.FillDirection = Enum.FillDirection.Horizontal
     TabListLayout.SortOrder = Enum.SortOrder.LayoutOrder
     TabListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center -- Центрирование табов
-    TabListLayout.Padding = UDim.new(0, 15) -- Небольшой отступ между табами
+    TabListLayout.Padding = UDim.new(0, 10)
 
     -- Контейнер для страниц контента
     local PageContainer = Instance.new("Frame")
@@ -156,7 +170,7 @@ function DeadHub:Init()
     end)
     trackConnection(inputBegan)
 
-    -- Функция скрытия/показа меню (на клавишу Insert)
+    -- Функция скрытия/показа меню (на клавишу RightShift / Правый Шифт по просьбе пользователя)
     local isVisible = true
     local function toggleMenu()
         isVisible = not isVisible
@@ -164,7 +178,7 @@ function DeadHub:Init()
     end
 
     local toggleKeyConnection = UserInputService.InputBegan:Connect(function(input, processed)
-        if not processed and input.KeyCode == Enum.KeyCode.Insert then
+        if not processed and input.KeyCode == Enum.KeyCode.RightShift then
             toggleMenu()
         end
     end)
@@ -176,14 +190,45 @@ function DeadHub:Init()
     function UI:CreateTab(tabName)
         local TabBtn = Instance.new("TextButton")
         TabBtn.Name = getStealthName()
-        TabBtn.Size = UDim2.new(0, 100, 1, 0) -- Ширина таба
+        TabBtn.Size = UDim2.new(0, 115, 1, 0) -- Ширина таба с иконкой
         TabBtn.BackgroundTransparency = 1
-        TabBtn.Text = tabName
-        TabBtn.TextColor3 = Color_TextDim
-        TabBtn.TextSize = 11
-        TabBtn.Font = Enum.Font.GothamBold
-        TabBtn.BorderSizePixel = 0
+        TabBtn.Text = ""
         TabBtn.Parent = TabBar
+
+        -- Иконка таба (Используются ресурсы из VoltEclipse)
+        local TabIcon = Instance.new("ImageLabel")
+        TabIcon.Name = getStealthName()
+        TabIcon.Size = UDim2.new(0, 14, 0, 14)
+        TabIcon.Position = UDim2.new(0, 8, 0.5, -7)
+        TabIcon.BackgroundTransparency = 1
+        TabIcon.ImageColor3 = Color_TextDim
+        
+        -- Автоматический выбор иконки по имени вкладки
+        if tabName:lower():find("aim") or tabName:lower():find("combat") then
+            TabIcon.Image = TabIcons.Combat
+        elseif tabName:lower():find("move") or tabName:lower():find("speed") or tabName:lower():find("fly") then
+            TabIcon.Image = TabIcons.Movement
+        elseif tabName:lower():find("visual") or tabName:lower():find("esp") then
+            TabIcon.Image = TabIcons.Visuals
+        elseif tabName:lower():find("world") then
+            TabIcon.Image = TabIcons.World
+        else
+            TabIcon.Image = TabIcons.Misc
+        end
+        TabIcon.Parent = TabBtn
+
+        -- Текст вкладки
+        local TabLabel = Instance.new("TextLabel")
+        TabLabel.Name = getStealthName()
+        TabLabel.Size = UDim2.new(1, -28, 1, 0)
+        TabLabel.Position = UDim2.new(0, 26, 0, 0)
+        TabLabel.BackgroundTransparency = 1
+        TabLabel.Text = tabName
+        TabLabel.TextColor3 = Color_TextDim
+        TabLabel.TextSize = 11
+        TabLabel.Font = Enum.Font.GothamBold
+        TabLabel.TextXAlignment = Enum.TextXAlignment.Left
+        TabLabel.Parent = TabBtn
 
         -- Тонкая красная полоска внизу активного таба
         local TabIndicator = Instance.new("Frame")
@@ -205,7 +250,7 @@ function DeadHub:Init()
         Page.ScrollBarImageColor3 = Color_Border
         Page.Parent = PageContainer
 
-        -- ТРИ КОЛОНКИ (ESP - WORLD - MISC / Секции side-by-side)
+        -- ТРИ КОЛОНКИ (ESP - WORLD - MISC)
         local LeftColumn = Instance.new("Frame")
         LeftColumn.Name = getStealthName()
         LeftColumn.Size = UDim2.new(0.33, -6, 0, 0)
@@ -242,7 +287,7 @@ function DeadHub:Init()
         RightList.SortOrder = Enum.SortOrder.LayoutOrder
         RightList.Padding = UDim.new(0, 10)
 
-        -- Вертикальные разделительные линии между колонками (Уникальный стиль)
+        -- Разделительные линии между колонками
         local DivLine1 = Instance.new("Frame")
         DivLine1.Name = getStealthName()
         DivLine1.Size = UDim2.new(0, 1, 1, 0)
@@ -259,7 +304,7 @@ function DeadHub:Init()
         DivLine2.BorderSizePixel = 0
         DivLine2.Parent = Page
 
-        -- Функция авто-подстройки высоты Canvas и разделительных линий под самую длинную колонку
+        -- Функция авто-подстройки высоты
         local function updateCanvasSize()
             local leftHeight = LeftList.AbsoluteContentSize.Y
             local middleHeight = MiddleList.AbsoluteContentSize.Y
@@ -282,29 +327,31 @@ function DeadHub:Init()
 
         local tabSelect = TabBtn.MouseButton1Click:Connect(function()
             if activeTab then
-                activeTab.Btn.TextColor3 = Color_TextDim
+                activeTab.Label.TextColor3 = Color_TextDim
+                activeTab.Icon.ImageColor3 = Color_TextDim
                 activeTab.Indicator.Visible = false
                 activeTab.Page.Visible = false
             end
             
-            TabBtn.TextColor3 = Color_Text
+            TabLabel.TextColor3 = Color_Text
+            TabIcon.ImageColor3 = Color_Text
             TabIndicator.Visible = true
             Page.Visible = true
-            activeTab = {Btn = TabBtn, Indicator = TabIndicator, Page = Page}
+            activeTab = {Btn = TabBtn, Label = TabLabel, Icon = TabIcon, Indicator = TabIndicator, Page = Page}
         end)
         trackConnection(tabSelect)
 
         if not activeTab then
-            TabBtn.TextColor3 = Color_Text
+            TabLabel.TextColor3 = Color_Text
+            TabIcon.ImageColor3 = Color_Text
             TabIndicator.Visible = true
             Page.Visible = true
-            activeTab = {Btn = TabBtn, Indicator = TabIndicator, Page = Page}
+            activeTab = {Btn = TabBtn, Label = TabLabel, Icon = TabIcon, Indicator = TabIndicator, Page = Page}
         end
 
         local TabAPI = {}
 
         -- 2. СОЗДАНИЕ ОКОН (СЕКЦИЙ) ВО ВКЛАДКАХ
-        -- column: "Left" (1), "Middle" (2), "Right" (3). По умолчанию "Left".
         function TabAPI:CreateWindow(windowTitle, column)
             local targetColumn = LeftColumn
             if column == "Middle" or column == "middle" or column == 2 or column == "Center" then
@@ -320,6 +367,12 @@ function DeadHub:Init()
             WindowFrame.BorderSizePixel = 1
             WindowFrame.BorderColor3 = Color_Border
             WindowFrame.Parent = targetColumn
+
+            -- Элегантная тонкая обводка для окон (по просьбе пользователя)
+            local WindowStroke = Instance.new("UIStroke")
+            WindowStroke.Color = Color3.fromRGB(35, 35, 40) -- Мягкий серый цвет для границ карточек
+            WindowStroke.Thickness = 1
+            WindowStroke.Parent = WindowFrame
 
             local WindowTitleLabel = Instance.new("TextLabel")
             WindowTitleLabel.Name = getStealthName()
@@ -395,6 +448,12 @@ function DeadHub:Init()
                 SquareBox.AutoButtonColor = false
                 SquareBox.Parent = ToggleWrapper
 
+                -- Тонкая обводка вокруг бокса тоггла
+                local ToggleBoxStroke = Instance.new("UIStroke")
+                ToggleBoxStroke.Color = Color3.fromRGB(38, 38, 44)
+                ToggleBoxStroke.Thickness = 1
+                ToggleBoxStroke.Parent = SquareBox
+
                 -- Красный квадрат внутри для индикации ВКЛ
                 local InnerSquare = Instance.new("Frame")
                 InnerSquare.Name = getStealthName()
@@ -428,6 +487,12 @@ function DeadHub:Init()
                 ButtonFrame.BorderSizePixel = 1
                 ButtonFrame.BorderColor3 = Color_Border
                 ButtonFrame.Parent = ContentFrame
+
+                -- Обводка для кнопок
+                local ButtonStroke = Instance.new("UIStroke")
+                ButtonStroke.Color = Color3.fromRGB(38, 38, 44)
+                ButtonStroke.Thickness = 1
+                ButtonStroke.Parent = ButtonFrame
 
                 local TextButton = Instance.new("TextButton")
                 TextButton.Name = getStealthName()
@@ -480,6 +545,12 @@ function DeadHub:Init()
                 SliderBar.Text = ""
                 SliderBar.AutoButtonColor = false
                 SliderBar.Parent = SliderWrapper
+
+                -- Обводка для слайдеров
+                local SliderStroke = Instance.new("UIStroke")
+                SliderStroke.Color = Color3.fromRGB(38, 38, 44)
+                SliderStroke.Thickness = 1
+                SliderStroke.Parent = SliderBar
 
                 -- Заполняющая полоса (Квадратная)
                 local Fill = Instance.new("Frame")
