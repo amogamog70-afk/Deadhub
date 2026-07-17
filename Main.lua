@@ -1,4 +1,4 @@
--- [[ DEADHUB STEALTH UI LIBRARY v2.2 ]] --
+-- [[ DEADHUB STEALTH UI LIBRARY v2.3 ]] --
 
 local DeadHub = {}
 
@@ -46,13 +46,51 @@ function DeadHub:Init()
     local SG = Instance.new("ScreenGui")
     SG.Name = rn(); SG.ResetOnSpawn = false; SG.Parent = parentContainer
 
-    -- MainFrame
-    local MF = Instance.new("Frame")
+    -- MainFrame (CanvasGroup для плавной анимации скрытия/открытия)
+    local MF = Instance.new("CanvasGroup")
     MF.Name = rn(); MF.Size = UDim2.new(0,720,0,450)
     MF.Position = UDim2.new(0.5,-360,0.5,-225)
     MF.BackgroundColor3 = C_BG; MF.BorderSizePixel = 0; MF.Parent = SG
     local mStroke = Instance.new("UIStroke")
     mStroke.Color = C_ACCENT; mStroke.Thickness = 1; mStroke.Parent = MF
+
+-- Theme system (allows easy color changes)
+local Theme = {
+    BG = Color3.fromRGB(12,12,14),
+    CARD = Color3.fromRGB(18,18,22),
+    HEADER = Color3.fromRGB(14,14,16),
+    BORDER = Color3.fromRGB(30,30,36),
+    ACCENT = Color3.fromRGB(255,85,95),
+    TEXT = Color3.fromRGB(255,255,255),
+    DIM = Color3.fromRGB(130,130,140),
+    BOX = Color3.fromRGB(28,28,32),
+}
+-- Apply theme colors (override defaults)
+C_BG = Theme.BG; C_CARD = Theme.CARD; C_HEADER = Theme.HEADER;
+C_BORDER = Theme.BORDER; C_ACCENT = Theme.ACCENT;
+C_TEXT = Theme.TEXT; C_DIM = Theme.DIM; C_BOX = Theme.BOX;
+
+-- Compact mode flag
+local CompactMode = false
+local function applyCompact()
+    local scale = CompactMode and 0.8 or 1
+    MF.Size = UDim2.new(0,720*scale,0,450*scale)
+    -- Adjust other UI elements here as needed for compact layout
+end
+
+-- Watermark (subtle bottom‑right label)
+local Watermark = Instance.new("TextLabel")
+Watermark.Name = "Watermark"
+Watermark.Size = UDim2.new(0,120,0,20)
+Watermark.Position = UDim2.new(1,-130,1,-30)
+Watermark.BackgroundTransparency = 1
+Watermark.Text = "DeadHub"
+Watermark.TextColor3 = Theme.DIM
+Watermark.TextTransparency = 0.8
+Watermark.TextSize = 12
+Watermark.Font = Enum.Font.Inter
+Watermark.ZIndex = 99999
+Watermark.Parent = SG
 
     -- Header
     local Header = Instance.new("Frame")
@@ -71,6 +109,30 @@ function DeadHub:Init()
     LogoLbl.Size = UDim2.new(1,0,1,0); LogoLbl.BackgroundTransparency = 1
     LogoLbl.Text = "DEADHUB"; LogoLbl.TextColor3 = C_ACCENT
     LogoLbl.TextSize = 11; LogoLbl.Font = Enum.Font.GothamBold
+
+-- Keybind system (menu toggle and compact mode)
+local MenuKey = Enum.KeyCode.RightShift
+local CompactKey = Enum.KeyCode.Insert
+
+local function setMenuKey(newKey)
+    MenuKey = newKey
+end
+local function setCompactKey(newKey)
+    CompactKey = newKey
+end
+
+track(UIS.InputBegan:Connect(function(inp)
+    if inp.KeyCode == MenuKey then
+        toggleMenu()
+    elseif inp.KeyCode == CompactKey then
+        CompactMode = not CompactMode
+        applyCompact()
+        -- Optional notification, assumes UI has Notification method
+        if UI and UI.Notification then
+            UI:Notification("Compact Mode", CompactMode and "Enabled" or "Disabled", 1.5)
+        end
+    end
+end))
     LogoLbl.TextXAlignment = Enum.TextXAlignment.Center; LogoLbl.Parent = LogoBg
 
     -- TabBar
@@ -129,9 +191,33 @@ function DeadHub:Init()
         end
     end))
 
+    -- Анимация RightShift (Fade-in / Fade-out)
+    local isVisible = true
+    local activeTween = nil
+    local tInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
+    local function toggleMenu()
+        if activeTween then activeTween:Cancel() end
+        if isVisible then
+            activeTween = TweenService:Create(MF, tInfo, {GroupTransparency = 1})
+            activeTween:Play()
+            activeTween.Completed:Connect(function()
+                if MF.GroupTransparency == 1 then
+                    MF.Visible = false
+                end
+            end)
+            isVisible = false
+        else
+            MF.Visible = true
+            activeTween = TweenService:Create(MF, tInfo, {GroupTransparency = 0})
+            activeTween:Play()
+            isVisible = true
+        end
+    end
+
     track(UIS.InputBegan:Connect(function(inp)
         if inp.KeyCode == Enum.KeyCode.RightShift then
-            MF.Visible = not MF.Visible
+            toggleMenu()
         end
     end))
 
@@ -195,6 +281,193 @@ function DeadHub:Init()
         if not (activeTab and activeTab.Btn == SBtn) then SLbl.TextColor3=C_DIM; SIco.ImageColor3=C_DIM end
     end))
 
+    -- ──────────────────── HELPER: МАКЕТ КРАСИВОГО СОВРЕМЕННОГО HSV COLOR PICKER ────────────────────
+    local function createModernColorPickerPanel(parentOverlay, initialColor, onColorChange)
+        local panel = Instance.new("Frame")
+        panel.Size = UDim2.new(0, 160, 0, 94)
+        panel.BackgroundColor3 = C_CARD
+        panel.BorderSizePixel = 0
+        panel.ZIndex = 99992
+        panel.Parent = parentOverlay
+        local ps = Instance.new("UIStroke"); ps.Color = C_BORDER; ps.Thickness = 1; ps.Parent = panel
+
+        local h, s, v = initialColor:ToHSV()
+
+        local function update()
+            local c = Color3.fromHSV(h, s, v)
+            onColorChange(c)
+            return c
+        end
+
+        local function createSliderRow(label, yOffset, getVal, setVal, getBgGradient)
+            local row = Instance.new("Frame")
+            row.Size = UDim2.new(1, -12, 0, 18)
+            row.Position = UDim2.new(0, 6, 0, yOffset)
+            row.BackgroundTransparency = 1
+            row.ZIndex = 99993
+            row.Parent = panel
+
+            local lbl = Instance.new("TextLabel")
+            lbl.Size = UDim2.new(0, 12, 1, 0)
+            lbl.BackgroundTransparency = 1
+            lbl.Text = label
+            lbl.TextColor3 = C_TEXT
+            lbl.TextSize = 9
+            lbl.Font = Enum.Font.GothamBold
+            lbl.ZIndex = 99994
+            lbl.Parent = row
+
+            local bar = Instance.new("TextButton")
+            bar.Size = UDim2.new(1, -18, 0, 6)
+            bar.Position = UDim2.new(0, 18, 0.5, -3)
+            bar.BackgroundColor3 = C_BOX
+            bar.BorderSizePixel = 0
+            bar.Text = ""
+            bar.AutoButtonColor = false
+            bar.ZIndex = 99994
+            bar.Parent = row
+            local bs = Instance.new("UIStroke"); bs.Color = C_BORDER; bs.Thickness = 1; bs.Parent = bar
+
+            local grad = Instance.new("UIGradient")
+            grad.Parent = bar
+
+            local function refreshGradient()
+                grad.Color = getBgGradient()
+            end
+            refreshGradient()
+
+            local fill = Instance.new("Frame")
+            fill.Size = UDim2.new(getVal(), 0, 1, 0)
+            fill.BackgroundColor3 = C_TEXT
+            fill.BackgroundTransparency = 0.5
+            fill.BorderSizePixel = 0
+            fill.ZIndex = 99995
+            fill.Parent = bar
+
+            local sliding = false
+            local function slide(input)
+                local p = math.clamp((input.Position.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
+                fill.Size = UDim2.new(p, 0, 1, 0)
+                setVal(p)
+                local c = update()
+                refreshGradient()
+            end
+
+            bar.InputBegan:Connect(function(i)
+                if i.UserInputType == Enum.UserInputType.MouseButton1 then sliding = true; slide(i) end
+            end)
+            UIS.InputEnded:Connect(function(i)
+                if i.UserInputType == Enum.UserInputType.MouseButton1 then sliding = false end
+            end)
+            UIS.InputChanged:Connect(function(i)
+                if sliding and i.UserInputType == Enum.UserInputType.MouseMovement then slide(i) end
+            end)
+
+            return refreshGradient
+        end
+
+        local refreshS, refreshV
+
+        -- Hue Slider (Rainbow)
+        local refreshH = createSliderRow("H", 4, function() return h end, function(val)
+            h = val
+            if refreshS then refreshS() end
+            if refreshV then refreshV() end
+        end, function()
+            return ColorSequence.new{
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(255,0,0)),
+                ColorSequenceKeypoint.new(0.17, Color3.fromRGB(255,255,0)),
+                ColorSequenceKeypoint.new(0.33, Color3.fromRGB(0,255,0)),
+                ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0,255,255)),
+                ColorSequenceKeypoint.new(0.67, Color3.fromRGB(0,0,255)),
+                ColorSequenceKeypoint.new(0.83, Color3.fromRGB(255,0,255)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(255,0,0))
+            }
+        end)
+
+        -- Saturation Slider (White to Fully Saturated Color)
+        refreshS = createSliderRow("S", 24, function() return s end, function(val)
+            s = val
+            if refreshV then refreshV() end
+        end, function()
+            return ColorSequence.new(Color3.new(1,1,1), Color3.fromHSV(h, 1, 1))
+        end)
+
+        -- Value (Brightness) Slider (Black to Color)
+        refreshV = createSliderRow("V", 44, function() return v end, function(val)
+            v = val
+            if refreshS then refreshS() end
+        end, function()
+            return ColorSequence.new(Color3.new(0,0,0), Color3.fromHSV(h, s, 1))
+        end)
+
+        -- Hex input + Preview row at the bottom
+        local bottomRow = Instance.new("Frame")
+        bottomRow.Size = UDim2.new(1, -12, 0, 20)
+        bottomRow.Position = UDim2.new(0, 6, 0, 66)
+        bottomRow.BackgroundTransparency = 1
+        bottomRow.ZIndex = 99993
+        bottomRow.Parent = panel
+
+        local preview = Instance.new("Frame")
+        preview.Size = UDim2.new(0, 24, 0, 14)
+        preview.Position = UDim2.new(0, 0, 0.5, -7)
+        preview.BackgroundColor3 = initialColor
+        preview.BorderSizePixel = 0
+        preview.ZIndex = 99994
+        preview.Parent = bottomRow
+        local prStr = Instance.new("UIStroke"); prStr.Color = C_BORDER; prStr.Thickness = 1; prStr.Parent = preview
+
+        local hexInput = Instance.new("TextBox")
+        hexInput.Size = UDim2.new(1, -34, 0, 14)
+        hexInput.Position = UDim2.new(0, 34, 0.5, -7)
+        hexInput.BackgroundColor3 = C_BOX
+        hexInput.BorderSizePixel = 0
+        hexInput.Text = "#" .. string.format("%02X%02X%02X", math.floor(initialColor.R*255), math.floor(initialColor.G*255), math.floor(initialColor.B*255))
+        hexInput.TextColor3 = C_TEXT
+        hexInput.TextSize = 9
+        hexInput.Font = Enum.Font.GothamBold
+        hexInput.ClearTextOnFocus = false
+        hexInput.ZIndex = 99994
+        hexInput.Parent = bottomRow
+        local hexStr = Instance.new("UIStroke"); hexStr.Color = C_BORDER; hexStr.Thickness = 1; hexStr.Parent = hexInput
+
+        -- Обратная связь при изменении через ползунки
+        local function onHSVUpdate(colorObj)
+            preview.BackgroundColor3 = colorObj
+            hexInput.Text = "#" .. string.format("%02X%02X%02X", math.floor(colorObj.R*255), math.floor(colorObj.G*255), math.floor(colorObj.B*255))
+        end
+
+        -- Переподключаем коллбек для обновления превью
+        local originalChange = onColorChange
+        onColorChange = function(newColor)
+            onHSVUpdate(newColor)
+            originalChange(newColor)
+        end
+
+        -- Hex ввод парсинг
+        hexInput.FocusLost:Connect(function()
+            local text = hexInput.Text:gsub("#", "")
+            if #text == 6 then
+                local r2 = tonumber(text:sub(1, 2), 16)
+                local g2 = tonumber(text:sub(3, 4), 16)
+                local b2 = tonumber(text:sub(5, 6), 16)
+                if r2 and g2 and b2 then
+                    local newCol = Color3.fromRGB(r2, g2, b2)
+                    h, s, v = newCol:ToHSV()
+                    preview.BackgroundColor3 = newCol
+                    refreshH()
+                    refreshS()
+                    refreshV()
+                    originalChange(newCol)
+                end
+            end
+        end)
+
+        return panel
+    end
+
+
     -- ──────────────────── WINDOW BUILDER ────────────────────
     local function buildWindow(title, col, LC, MC, RC)
         local tgt = LC
@@ -220,7 +493,7 @@ function DeadHub:Init()
         CF.BackgroundTransparency = 1; CF.Parent = WF
 
         local CL = Instance.new("UIListLayout"); CL.Parent = CF
-        CL.SortOrder = Enum.SortOrder.LayoutOrder; CL.Padding = UDim.new(0,3)
+        CL.SortOrder = Enum.SortOrder.LayoutOrder; CL.Padding = UDim.new(0,4)
         CL.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
         CL:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
@@ -229,7 +502,6 @@ function DeadHub:Init()
 
         local W = {}
 
-        -- Helper to create general row container and handle hover logic
         local function createRow(height)
             local row = Instance.new("Frame")
             row.Size = UDim2.new(1,-16,0,height)
@@ -256,7 +528,7 @@ function DeadHub:Init()
             end))
         end
 
-        -- ── TOGGLE (Чистый Линориа-стайл, возврат объекта с методами цепочки) ──
+        -- ── TOGGLE ──
         function W:CreateToggle(txt, default, cb)
             local state = default or false
             local TW = createRow(20)
@@ -277,9 +549,9 @@ function DeadHub:Init()
             TLbl.TextColor3 = C_DIM; TLbl.TextSize = 11; TLbl.Font = Enum.Font.Gotham
             TLbl.TextXAlignment = Enum.TextXAlignment.Left; TLbl.Parent = TW
 
-            -- Контейнер для цепочек (Keybind, ColorPicker) справа
+            -- Контейнер для цепочек
             local Sub = Instance.new("Frame")
-            Sub.Size = UDim2.new(0,50,1,0); Sub.Position = UDim2.new(1,-50,0,0)
+            Sub.Size = UDim2.new(0,60,1,0); Sub.Position = UDim2.new(1,-60,0,0)
             Sub.BackgroundTransparency = 1; Sub.Parent = TW
             local SubL = Instance.new("UIListLayout")
             SubL.FillDirection = Enum.FillDirection.Horizontal
@@ -300,12 +572,12 @@ function DeadHub:Init()
 
             local toggleObj = {}
 
-            -- Цепочка: Keybind
+            -- Цепочка: Keybind (Toggle / Hold / Always)
             function toggleObj:AddKeybind(defaultKey, bindCb)
                 local key = defaultKey or Enum.KeyCode.Unknown
                 local keyName = (key ~= Enum.KeyCode.Unknown) and key.Name or "None"
                 local binding = false
-                local mode = "Toggle" -- Toggle, Hold
+                local mode = "Toggle" -- Toggle, Hold, Always
 
                 local KBtn = Instance.new("TextButton")
                 KBtn.Size = UDim2.new(0,38,0,12); KBtn.BackgroundColor3 = C_BOX; KBtn.BorderSizePixel = 0
@@ -333,6 +605,8 @@ function DeadHub:Init()
                                 if mode == "Toggle" then
                                     updateState(not state)
                                 elseif mode == "Hold" then
+                                    updateState(true)
+                                elseif mode == "Always" then
                                     updateState(true)
                                 end
                                 if bindCb then bindCb(key, mode) end
@@ -372,12 +646,19 @@ function DeadHub:Init()
                     end
                 end))
 
-                -- Right click to choose mode
+                -- Right click to choose mode (Toggle / Hold / Always)
                 track(KBtn.MouseButton2Click:Connect(function()
                     local overlay = Instance.new("TextButton")
-                    overlay.Size = UDim2.new(1,0,1,0); overlay.BackgroundTransparency = 1; overlay.ZIndex = 99990; overlay.Parent = SG
+                    overlay.Size = UDim2.new(1,0,1,0)
+                    overlay.BackgroundTransparency = 1
+                    overlay.Text = "" -- КРИТИЧЕСКИЙ ФИКС: Очищаем дефолтный текст
+                    overlay.AutoButtonColor = false
+                    overlay.ZIndex = 99990
+                    overlay.Parent = SG
+                    
                     local drop = Instance.new("Frame")
-                    drop.Size = UDim2.new(0,50,0,32); drop.Position = UDim2.new(0, KBtn.AbsolutePosition.X, 0, KBtn.AbsolutePosition.Y+14)
+                    drop.Size = UDim2.new(0,50,0,48)
+                    drop.Position = UDim2.new(0, KBtn.AbsolutePosition.X, 0, KBtn.AbsolutePosition.Y+14)
                     drop.BackgroundColor3 = C_CARD; drop.BorderSizePixel = 0; drop.ZIndex = 99991; drop.Parent = overlay
                     local ds = Instance.new("UIStroke"); ds.Color = C_BORDER; ds.Thickness = 1; ds.Parent = drop
                     
@@ -388,17 +669,18 @@ function DeadHub:Init()
                         b.Font = Enum.Font.GothamBold; b.ZIndex = 99992; b.Parent = drop
                         b.MouseButton1Click:Connect(function()
                             mode = n; overlay:Destroy()
+                            if mode == "Always" then updateState(true) end
                             UI:Notification("Keybind Mode", txt..": "..mode, 1.5)
                         end)
                     end
-                    mkOpt("Toggle", 0); mkOpt("Hold", 16)
+                    mkOpt("Toggle", 0); mkOpt("Hold", 16); mkOpt("Always", 32)
                     overlay.MouseButton1Click:Connect(function() overlay:Destroy() end)
                 end))
 
                 return toggleObj
             end
 
-            -- Цепочка: ColorPicker
+            -- Цепочка: ColorPicker (Modern)
             function toggleObj:AddColorPicker(defaultColor, cpCb)
                 local color = defaultColor or Color3.fromRGB(220,30,50)
 
@@ -409,38 +691,19 @@ function DeadHub:Init()
 
                 track(CBox.MouseButton1Click:Connect(function()
                     local overlay = Instance.new("TextButton")
-                    overlay.Size = UDim2.new(1,0,1,0); overlay.BackgroundTransparency = 1; overlay.ZIndex = 99990; overlay.Parent = SG
-                    local panel = Instance.new("Frame")
-                    panel.Size = UDim2.new(0,90,0,58); panel.Position = UDim2.new(0, CBox.AbsolutePosition.X-90+12, 0, CBox.AbsolutePosition.Y+14)
-                    panel.BackgroundColor3 = C_CARD; panel.BorderSizePixel = 0; panel.ZIndex = 99991; panel.Parent = overlay
-                    local ps = Instance.new("UIStroke"); ps.Color = C_BORDER; ps.Thickness = 1; ps.Parent = panel
+                    overlay.Size = UDim2.new(1,0,1,0)
+                    overlay.BackgroundTransparency = 1
+                    overlay.Text = "" -- КРИТИЧЕСКИЙ ФИКС: Очищаем дефолтный текст
+                    overlay.AutoButtonColor = false
+                    overlay.ZIndex = 99990
+                    overlay.Parent = SG
 
-                    local r,g,b = color.R, color.G, color.B
-                    local function updateColor()
-                        color = Color3.new(r,g,b); CBox.BackgroundColor3 = color; cpCb(color)
-                    end
-                    local function mkSlider(lbl, val, y, setter)
-                        local sl = Instance.new("TextButton")
-                        sl.Size = UDim2.new(1,-10,0,12); sl.Position = UDim2.new(0,5,0,y)
-                        sl.BackgroundColor3 = C_BOX; sl.BorderSizePixel = 0; sl.Text = ""; sl.ZIndex = 99992; sl.Parent = panel
-                        local ss = Instance.new("UIStroke"); ss.Color = C_BORDER; ss.Thickness = 1; ss.Parent = sl
-                        local f = Instance.new("Frame"); f.Size = UDim2.new(val,0,1,0); f.BackgroundColor3 = C_ACCENT; f.BorderSizePixel = 0; f.Parent = sl
-                        local l = Instance.new("TextLabel"); l.Size = UDim2.new(1,0,1,0); l.BackgroundTransparency = 1
-                        l.Text = lbl..": "..tostring(math.floor(val*255)); l.TextColor3 = C_TEXT; l.TextSize = 8
-                        l.Font = Enum.Font.GothamBold; l.ZIndex = 99993; l.Parent = sl
-                        local sliding = false
-                        local function sv(i)
-                            local p = math.clamp((i.Position.X-sl.AbsolutePosition.X)/sl.AbsoluteSize.X,0,1)
-                            f.Size = UDim2.new(p,0,1,0); l.Text = lbl..": "..tostring(math.floor(p*255))
-                            setter(p); updateColor()
-                        end
-                        sl.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then sliding=true; sv(i) end end)
-                        UIS.InputEnded:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then sliding=false end end)
-                        UIS.InputChanged:Connect(function(i) if sliding and i.UserInputType==Enum.UserInputType.MouseMovement then sv(i) end end)
-                    end
-                    mkSlider("R", r, 4,  function(v) r=v end)
-                    mkSlider("G", g, 20, function(v) g=v end)
-                    mkSlider("B", b, 36, function(v) b=v end)
+                    createModernColorPickerPanel(overlay, color, function(newColor)
+                        color = newColor
+                        CBox.BackgroundColor3 = newColor
+                        cpCb(newColor)
+                    end).Position = UDim2.new(0, CBox.AbsolutePosition.X - 160 + 12, 0, CBox.AbsolutePosition.Y + 14)
+
                     overlay.MouseButton1Click:Connect(function() overlay:Destroy() end)
                 end))
 
@@ -450,12 +713,11 @@ function DeadHub:Init()
             return toggleObj
         end
 
-        -- ── SLIDER (Тонкий Линориа-стайл) ──
+        -- ── SLIDER (Высота полоски 6px) ──
         function W:CreateSlider(txt, min, max, default, cb)
             local val = default or min
-            local SW = createRow(28)
+            local SW = createRow(30)
 
-            -- Текст слева, Значение в квадратных скобках [val] справа
             local SLbl = Instance.new("TextLabel")
             SLbl.Size = UDim2.new(1,-50,0,14); SLbl.BackgroundTransparency = 1; SLbl.Text = txt
             SLbl.TextColor3 = C_DIM; SLbl.TextSize = 11; SLbl.Font = Enum.Font.Gotham; SLbl.TextXAlignment = Enum.TextXAlignment.Left; SLbl.Parent = SW
@@ -465,9 +727,9 @@ function DeadHub:Init()
             VLbl.BackgroundTransparency = 1; VLbl.Text = "["..tostring(val).."]"
             VLbl.TextColor3 = C_DIM; VLbl.TextSize = 10; VLbl.Font = Enum.Font.GothamBold; VLbl.TextXAlignment = Enum.TextXAlignment.Right; VLbl.Parent = SW
 
-            -- Тонкая полоска слайдера (высота 4px)
+            -- Полоска слайдера (высота 6px)
             local SBar = Instance.new("TextButton")
-            SBar.Size = UDim2.new(1,0,0,4); SBar.Position = UDim2.new(0,0,0,18)
+            SBar.Size = UDim2.new(1,0,0,6); SBar.Position = UDim2.new(0,0,0,18)
             SBar.BackgroundColor3 = C_BOX; SBar.BorderSizePixel = 0; SBar.Text = ""; SBar.AutoButtonColor = false; SBar.Parent = SW
             local SS = Instance.new("UIStroke"); SS.Color = C_BORDER; SS.Thickness = 1; SS.Parent = SBar
             local Fill = Instance.new("Frame")
@@ -488,10 +750,10 @@ function DeadHub:Init()
             track(UIS.InputChanged:Connect(function(i) if sliding and i.UserInputType==Enum.UserInputType.MouseMovement then upd(i) end end))
         end
 
-        -- ── DROPDOWN (С абсолютным позиционированием выпадающего списка) ──
+        -- ── DROPDOWN (Абсолютное позиционирование, без сдвига контента!) ──
         function W:CreateDropdown(txt, opts, default, cb)
             local sel = default or opts[1] or ""
-            local DW = createRow(32)
+            local DW = createRow(32) -- Фиксированная высота 32px навсегда!
 
             local DLbl = Instance.new("TextLabel")
             DLbl.Size = UDim2.new(1,0,0,14); DLbl.BackgroundTransparency = 1; DLbl.Text = txt
@@ -513,7 +775,12 @@ function DeadHub:Init()
 
             track(DBt.MouseButton1Click:Connect(function()
                 local overlay = Instance.new("TextButton")
-                overlay.Size = UDim2.new(1,0,1,0); overlay.BackgroundTransparency = 1; overlay.ZIndex = 99990; overlay.Parent = SG
+                overlay.Size = UDim2.new(1,0,1,0)
+                overlay.BackgroundTransparency = 1
+                overlay.Text = "" -- КРИТИЧЕСКИЙ ФИКС: Очищаем дефолтный текст
+                overlay.AutoButtonColor = false
+                overlay.ZIndex = 99990
+                overlay.Parent = SG
                 
                 local drop = Instance.new("Frame")
                 drop.Size = UDim2.new(0, DBt.AbsoluteSize.X, 0, #opts*16)
@@ -537,10 +804,10 @@ function DeadHub:Init()
             end))
         end
 
-        -- ── MULTISELECT (Абсолютный список выбора) ──
+        -- ── MULTISELECT (Абсолютный список, без сдвига контента!) ──
         function W:CreateMultiSelect(txt, opts, defaults, cb)
             local sel = defaults or {}
-            local DW = createRow(32)
+            local DW = createRow(32) -- Фиксированная высота 32px навсегда!
 
             local DLbl = Instance.new("TextLabel")
             DLbl.Size = UDim2.new(1,0,0,14); DLbl.BackgroundTransparency = 1; DLbl.Text = txt
@@ -568,7 +835,12 @@ function DeadHub:Init()
 
             track(DBt.MouseButton1Click:Connect(function()
                 local overlay = Instance.new("TextButton")
-                overlay.Size = UDim2.new(1,0,1,0); overlay.BackgroundTransparency = 1; overlay.ZIndex = 99990; overlay.Parent = SG
+                overlay.Size = UDim2.new(1,0,1,0)
+                overlay.BackgroundTransparency = 1
+                overlay.Text = "" -- КРИТИЧЕСКИЙ ФИКС: Очищаем дефолтный текст
+                overlay.AutoButtonColor = false
+                overlay.ZIndex = 99990
+                overlay.Parent = SG
                 
                 local drop = Instance.new("Frame")
                 drop.Size = UDim2.new(0, DBt.AbsoluteSize.X, 0, #opts*16)
@@ -595,12 +867,12 @@ function DeadHub:Init()
             end))
         end
 
-        -- ── COLORPICKER (Standalone) ──
+        -- ── COLORPICKER (Standalone Modern) ──
         function W:CreateColorPicker(txt, default, cb)
             local color = default or Color3.fromRGB(220,30,50)
             local PW = createRow(20)
 
-            -- Квадрат цвета
+            -- Квадрат цвета СЛЕВА
             local CBox = Instance.new("TextButton")
             CBox.Size = UDim2.new(0,12,0,12); CBox.Position = UDim2.new(0,2,0.5,-6)
             CBox.BackgroundColor3 = color; CBox.BorderSizePixel = 0; CBox.Text = ""; CBox.Parent = PW
@@ -618,39 +890,19 @@ function DeadHub:Init()
 
             track(CBox.MouseButton1Click:Connect(function()
                 local overlay = Instance.new("TextButton")
-                overlay.Size = UDim2.new(1,0,1,0); overlay.BackgroundTransparency = 1; overlay.ZIndex = 99990; overlay.Parent = SG
+                overlay.Size = UDim2.new(1,0,1,0)
+                overlay.BackgroundTransparency = 1
+                overlay.Text = "" -- КРИТИЧЕСКИЙ ФИКС: Очищаем дефолтный текст
+                overlay.AutoButtonColor = false
+                overlay.ZIndex = 99990
+                overlay.Parent = SG
                 
-                local panel = Instance.new("Frame")
-                panel.Size = UDim2.new(0,90,0,58); panel.Position = UDim2.new(0, CBox.AbsolutePosition.X-90+12, 0, CBox.AbsolutePosition.Y+14)
-                panel.BackgroundColor3 = C_CARD; panel.BorderSizePixel = 0; panel.ZIndex = 99991; panel.Parent = overlay
-                local ps = Instance.new("UIStroke"); ps.Color = C_BORDER; ps.Thickness = 1; ps.Parent = panel
+                createModernColorPickerPanel(overlay, color, function(newColor)
+                    color = newColor
+                    CBox.BackgroundColor3 = newColor
+                    cb(newColor)
+                end).Position = UDim2.new(0, CBox.AbsolutePosition.X - 160 + 12, 0, CBox.AbsolutePosition.Y + 14)
 
-                local r,g,b = color.R, color.G, color.B
-                local function updateColor()
-                    color = Color3.new(r,g,b); CBox.BackgroundColor3 = color; cb(color)
-                end
-                local function mkSlider(lbl, val, y, setter)
-                    local sl = Instance.new("TextButton")
-                    sl.Size = UDim2.new(1,-10,0,12); sl.Position = UDim2.new(0,5,0,y)
-                    sl.BackgroundColor3 = C_BOX; sl.BorderSizePixel = 0; sl.Text = ""; sl.ZIndex = 99992; sl.Parent = panel
-                    local ss = Instance.new("UIStroke"); ss.Color = C_BORDER; ss.Thickness = 1; ss.Parent = sl
-                    local f = Instance.new("Frame"); f.Size = UDim2.new(val,0,1,0); f.BackgroundColor3 = C_ACCENT; f.BorderSizePixel = 0; f.Parent = sl
-                    local l = Instance.new("TextLabel"); l.Size = UDim2.new(1,0,1,0); l.BackgroundTransparency = 1
-                    l.Text = lbl..": "..tostring(math.floor(val*255)); l.TextColor3 = C_TEXT; l.TextSize = 8
-                    l.Font = Enum.Font.GothamBold; l.ZIndex = 99993; l.Parent = sl
-                    local sliding = false
-                    local function sv(i)
-                        local p = math.clamp((i.Position.X-sl.AbsolutePosition.X)/sl.AbsoluteSize.X,0,1)
-                        f.Size = UDim2.new(p,0,1,0); l.Text = lbl..": "..tostring(math.floor(p*255))
-                        setter(p); updateColor()
-                    end
-                    sl.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then sliding=true; sv(i) end end)
-                    UIS.InputEnded:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then sliding=false end end)
-                    UIS.InputChanged:Connect(function(i) if sliding and i.UserInputType==Enum.UserInputType.MouseMovement then sv(i) end end)
-                end
-                mkSlider("R", r, 4,  function(v) r=v end)
-                mkSlider("G", g, 20, function(v) g=v end)
-                mkSlider("B", b, 36, function(v) b=v end)
                 overlay.MouseButton1Click:Connect(function() overlay:Destroy() end)
             end))
         end
