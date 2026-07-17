@@ -37,6 +37,7 @@ function DeadHub:Init()
     local C_ACCENT  = Color3.fromRGB(235,35,55)
     local C_TEXT    = Color3.fromRGB(255,255,255)
     local C_DIM     = Color3.fromRGB(140,140,150)
+    local C_H       = Color3.fromRGB(52,18,22)   -- мягкая тёмно-красная обводка при ховере
     local UIS       = game:GetService("UserInputService")
 
     -- ScreenGui
@@ -266,37 +267,29 @@ function DeadHub:Init()
             TB.Name=rn(); TB.Size=UDim2.new(1,0,1,0)
             TB.BackgroundTransparency=1; TB.Text=txt
             TB.TextColor3=C_DIM; TB.TextSize=11; TB.Font=Enum.Font.GothamBold; TB.Parent=BF
-            track(TB.MouseEnter:Connect(function() bs.Color=C_ACCENT; TB.TextColor3=C_ACCENT end))
+            track(TB.MouseEnter:Connect(function() bs.Color=C_H; TB.TextColor3=C_TEXT end))
             track(TB.MouseLeave:Connect(function() bs.Color=Color3.fromRGB(38,38,44); TB.TextColor3=C_DIM end))
             track(TB.MouseButton1Click:Connect(function() TB.TextColor3=C_TEXT; task.wait(0.1); TB.TextColor3=C_DIM; cb() end))
         end
 
-        -- TOGGLE (Toggle / Hold / Always)
+        -- TOGGLE — inline style dropdown справа от имени
         function W:CreateToggle(txt, default, style, cb)
-            -- style: "Toggle" | "Hold" | "Always"
+            local styles = {"Toggle", "Hold", "Always"}
             style = style or "Toggle"
-            local state = (style == "Always") and true or (default or false)
+            local styleIdx = 1
+            for i,s in ipairs(styles) do if s==style then styleIdx=i break end end
+            local state = (style=="Always") and true or (default or false)
+            local dropOpen = false
 
+            -- Основной ряд
             local TW = Instance.new("Frame")
             TW.Name=rn(); TW.Size=UDim2.new(1,-20,0,24)
             TW.BackgroundTransparency=1; TW.Parent=CF
 
-            local TLabel = Instance.new("TextLabel")
-            TLabel.Name=rn(); TLabel.Size=UDim2.new(1,-70,1,0)
-            TLabel.BackgroundTransparency=1; TLabel.Text=txt
-            TLabel.TextColor3=C_TEXT; TLabel.TextSize=12; TLabel.Font=Enum.Font.Gotham
-            TLabel.TextXAlignment=Enum.TextXAlignment.Left; TLabel.Parent=TW
-
-            -- Стиль метка
-            local StyleLbl = Instance.new("TextLabel")
-            StyleLbl.Size=UDim2.new(0,40,1,0); StyleLbl.Position=UDim2.new(1,-60,0,0)
-            StyleLbl.BackgroundTransparency=1; StyleLbl.Text=style
-            StyleLbl.TextColor3=C_DIM; StyleLbl.TextSize=9; StyleLbl.Font=Enum.Font.Gotham
-            StyleLbl.TextXAlignment=Enum.TextXAlignment.Right; StyleLbl.Parent=TW
-
-            local Box = Instance.new("TextButton")
+            -- Чекбокс-квадрат (крайний левый)
+            local Box=Instance.new("TextButton")
             Box.Name=rn(); Box.Size=UDim2.new(0,16,0,16)
-            Box.Position=UDim2.new(1,-16,0.5,-8)
+            Box.Position=UDim2.new(0,0,0.5,-8)
             Box.BackgroundColor3=C_BG; Box.BorderSizePixel=0
             Box.Text=""; Box.AutoButtonColor=false; Box.Parent=TW
             local BoxStroke=Instance.new("UIStroke"); BoxStroke.Color=Color3.fromRGB(38,38,44); BoxStroke.Thickness=1; BoxStroke.Parent=Box
@@ -306,25 +299,103 @@ function DeadHub:Init()
             Inner.BackgroundColor3=C_ACCENT; Inner.BorderSizePixel=0
             Inner.Visible=state; Inner.Parent=Box
 
-            local function setState(v)
-                state = v; Inner.Visible = state; cb(state)
+            -- Имя функции
+            local TLabel=Instance.new("TextLabel")
+            TLabel.Name=rn(); TLabel.Size=UDim2.new(1,-80,1,0)
+            TLabel.Position=UDim2.new(0,22,0,0)
+            TLabel.BackgroundTransparency=1; TLabel.Text=txt
+            TLabel.TextColor3=C_TEXT; TLabel.TextSize=12; TLabel.Font=Enum.Font.Gotham
+            TLabel.TextXAlignment=Enum.TextXAlignment.Left; TLabel.Parent=TW
+
+            -- Дропдаун кнопка стиля работы
+            local StyleBtn=Instance.new("TextButton")
+            StyleBtn.Name=rn(); StyleBtn.Size=UDim2.new(0,56,0,18)
+            StyleBtn.Position=UDim2.new(1,-58,0.5,-9)
+            StyleBtn.BackgroundColor3=C_BG; StyleBtn.BorderSizePixel=0
+            StyleBtn.Text=style.." ▾"; StyleBtn.TextColor3=C_DIM; StyleBtn.TextSize=9
+            StyleBtn.Font=Enum.Font.GothamBold; StyleBtn.Parent=TW
+            local SBStroke=Instance.new("UIStroke"); SBStroke.Color=Color3.fromRGB(38,38,44); SBStroke.Thickness=1; SBStroke.Parent=StyleBtn
+
+            -- Выпадающий список стилей
+            local DropFrame=Instance.new("Frame")
+            DropFrame.Name=rn(); DropFrame.Size=UDim2.new(0,56,0,#styles*18)
+            DropFrame.Position=UDim2.new(1,-58,0,24)
+            DropFrame.BackgroundColor3=C_CARD; DropFrame.BorderSizePixel=0
+            DropFrame.Visible=false; DropFrame.ZIndex=10; DropFrame.Parent=TW
+            local DFS=Instance.new("UIStroke"); DFS.Color=C_ACCENT; DFS.Thickness=1; DFS.Parent=DropFrame
+
+            local function closeStyleDrop()
+                dropOpen=false; DropFrame.Visible=false
+                TW.Size=UDim2.new(1,-20,0,24)
             end
 
-            if style == "Toggle" then
-                track(Box.MouseButton1Click:Connect(function() setState(not state) end))
-            elseif style == "Hold" then
-                track(Box.InputBegan:Connect(function(inp)
-                    if inp.UserInputType==Enum.UserInputType.MouseButton1 then setState(true) end
-                end))
-                track(Box.InputEnded:Connect(function(inp)
-                    if inp.UserInputType==Enum.UserInputType.MouseButton1 then setState(false) end
-                end))
-            elseif style == "Always" then
-                setState(true)
+            -- Логика переключения состояния по текущему стилю
+            local function rebindToggle()
+                -- отключаем все старые (нельзя отключить точечно, используем флаги)
             end
 
-            track(TW.MouseEnter:Connect(function() BoxStroke.Color=C_ACCENT; TLabel.TextColor3=C_ACCENT end))
-            track(TW.MouseLeave:Connect(function() BoxStroke.Color=Color3.fromRGB(38,38,44); TLabel.TextColor3=C_TEXT end))
+            local currentStyle = style
+            local holdActive = false
+
+            -- Главная логика activate по текущему стилю
+            local function activate()
+                if currentStyle=="Toggle" then
+                    state=not state; Inner.Visible=state; cb(state)
+                elseif currentStyle=="Always" then
+                    if not state then state=true; Inner.Visible=true; cb(true) end
+                end
+            end
+
+            track(Box.MouseButton1Down:Connect(function()
+                if currentStyle=="Toggle" then activate()
+                elseif currentStyle=="Hold" then
+                    holdActive=true; state=true; Inner.Visible=true; cb(true)
+                elseif currentStyle=="Always" then activate() end
+            end))
+            track(Box.MouseButton1Up:Connect(function()
+                if currentStyle=="Hold" then
+                    holdActive=false; state=false; Inner.Visible=false; cb(false)
+                end
+            end))
+
+            -- Опции стилей в дропдауне
+            for i,s in ipairs(styles) do
+                local SOption=Instance.new("TextButton")
+                SOption.Size=UDim2.new(1,0,0,18)
+                SOption.Position=UDim2.new(0,0,0,(i-1)*18)
+                SOption.BackgroundColor3=C_BG; SOption.BorderSizePixel=0
+                SOption.Text=" "..s; SOption.TextColor3=(s==style) and C_ACCENT or C_DIM
+                SOption.TextSize=9; SOption.Font=Enum.Font.GothamBold
+                SOption.TextXAlignment=Enum.TextXAlignment.Left; SOption.ZIndex=11; SOption.Parent=DropFrame
+                SOption.MouseEnter:Connect(function() SOption.TextColor3=C_ACCENT end)
+                SOption.MouseLeave:Connect(function() if s~=currentStyle then SOption.TextColor3=C_DIM end end)
+                SOption.MouseButton1Click:Connect(function()
+                    -- Обновляем стиль
+                    currentStyle=s
+                    StyleBtn.Text=s.." ▾"; StyleBtn.TextColor3=C_ACCENT
+                    -- Цвет опций
+                    for _,ch in ipairs(DropFrame:GetChildren()) do
+                        if ch:IsA("TextButton") then ch.TextColor3=(ch.Text==" "..s) and C_ACCENT or C_DIM end
+                    end
+                    -- Сброс состояния
+                    if s=="Always" then state=true; Inner.Visible=true; cb(true)
+                    else state=false; Inner.Visible=false; cb(false) end
+                    closeStyleDrop()
+                end)
+            end
+
+            track(StyleBtn.MouseButton1Click:Connect(function()
+                dropOpen=not dropOpen; DropFrame.Visible=dropOpen
+                TW.Size=dropOpen and UDim2.new(1,-20,0,24+#styles*18) or UDim2.new(1,-20,0,24)
+                StyleBtn.TextColor3=dropOpen and C_ACCENT or C_DIM
+                SBStroke.Color=dropOpen and C_ACCENT or Color3.fromRGB(38,38,44)
+            end))
+
+            track(TW.MouseEnter:Connect(function() BoxStroke.Color=C_H; TLabel.TextColor3=C_TEXT end))
+            track(TW.MouseLeave:Connect(function()
+                BoxStroke.Color=Color3.fromRGB(38,38,44); TLabel.TextColor3=C_TEXT
+                if not dropOpen then StyleBtn.TextColor3=C_DIM; SBStroke.Color=Color3.fromRGB(38,38,44) end
+            end))
 
             task.spawn(function() cb(state) end)
         end
@@ -354,7 +425,7 @@ function DeadHub:Init()
             VLbl.Text=tostring(val); VLbl.TextColor3=C_TEXT; VLbl.TextSize=11
             VLbl.Font=Enum.Font.GothamBold; VLbl.TextXAlignment=Enum.TextXAlignment.Center; VLbl.Parent=SBar
 
-            track(SW.MouseEnter:Connect(function() SS.Color=C_ACCENT; SLabel.TextColor3=C_ACCENT end))
+            track(SW.MouseEnter:Connect(function() SS.Color=C_H; SLabel.TextColor3=C_TEXT end))
             track(SW.MouseLeave:Connect(function() SS.Color=Color3.fromRGB(38,38,44); SLabel.TextColor3=C_TEXT end))
 
             local sliding=false
@@ -482,33 +553,41 @@ function DeadHub:Init()
                 end)
             end
             track(DBt.MouseButton1Click:Connect(toggle))
-            track(DW.MouseEnter:Connect(function() DS.Color=C_ACCENT; DLabel.TextColor3=C_ACCENT end))
+            track(DW.MouseEnter:Connect(function() DS.Color=C_H; DLabel.TextColor3=C_TEXT end))
             track(DW.MouseLeave:Connect(function() DS.Color=Color3.fromRGB(38,38,44); DLabel.TextColor3=C_TEXT end))
             task.spawn(function() cb(sel) end)
         end
 
-        -- COLORPICKER (PixelColor)
+        -- COLORPICKER — цветной квадрат слева от имени
         function W:CreateColorPicker(txt, default, cb)
             local color = default or Color3.fromRGB(235,35,55)
             local opened = false
+
             local PW=Instance.new("Frame")
             PW.Name=rn(); PW.Size=UDim2.new(1,-20,0,24)
             PW.BackgroundTransparency=1; PW.Parent=CF
+
+            -- Цветной квадрат СЛЕВА от имени
+            local CBox=Instance.new("TextButton")
+            CBox.Name=rn(); CBox.Size=UDim2.new(0,20,0,16)
+            CBox.Position=UDim2.new(0,0,0.5,-8)
+            CBox.BackgroundColor3=color; CBox.BorderSizePixel=0; CBox.Text=""; CBox.Parent=PW
+            local CS=Instance.new("UIStroke"); CS.Color=Color3.fromRGB(38,38,44); CS.Thickness=1; CS.Parent=CBox
+
+            -- Имя элемента справа от квадрата
             local PLbl=Instance.new("TextLabel")
-            PLbl.Name=rn(); PLbl.Size=UDim2.new(1,-50,1,0)
+            PLbl.Name=rn(); PLbl.Size=UDim2.new(1,-26,1,0)
+            PLbl.Position=UDim2.new(0,24,0,0)
             PLbl.BackgroundTransparency=1; PLbl.Text=txt
             PLbl.TextColor3=C_TEXT; PLbl.TextSize=12; PLbl.Font=Enum.Font.Gotham
             PLbl.TextXAlignment=Enum.TextXAlignment.Left; PLbl.Parent=PW
-            local CBox=Instance.new("TextButton")
-            CBox.Name=rn(); CBox.Size=UDim2.new(0,30,0,16)
-            CBox.Position=UDim2.new(1,-30,0.5,-8)
-            CBox.BackgroundColor3=color; CBox.BorderSizePixel=0; CBox.Text=""; CBox.Parent=PW
-            local CS=Instance.new("UIStroke"); CS.Color=Color3.fromRGB(38,38,44); CS.Thickness=1; CS.Parent=CBox
+
+            -- RGB слайдеры (раскрываются ниже)
             local Panel=Instance.new("Frame")
             Panel.Size=UDim2.new(1,0,0,56); Panel.Position=UDim2.new(0,0,0,24)
             Panel.BackgroundColor3=C_CARD; Panel.BorderSizePixel=0
             Panel.Visible=false; Panel.ZIndex=5; Panel.Parent=PW
-            local PS=Instance.new("UIStroke"); PS.Color=C_BORDER; PS.Thickness=1; PS.Parent=Panel
+            local PS=Instance.new("UIStroke"); PS.Color=C_ACCENT; PS.Thickness=1; PS.Parent=Panel
 
             local r,g,b=color.R,color.G,color.B
             local function upd() color=Color3.new(r,g,b); CBox.BackgroundColor3=color; cb(color) end
@@ -541,46 +620,52 @@ function DeadHub:Init()
             CBox.MouseButton1Click:Connect(function()
                 opened=not opened; Panel.Visible=opened
                 PW.Size=opened and UDim2.new(1,-20,0,84) or UDim2.new(1,-20,0,24)
+                CS.Color=opened and C_ACCENT or Color3.fromRGB(38,38,44)
             end)
-            track(PW.MouseEnter:Connect(function() CS.Color=C_ACCENT; PLbl.TextColor3=C_ACCENT end))
-            track(PW.MouseLeave:Connect(function() CS.Color=Color3.fromRGB(38,38,44); PLbl.TextColor3=C_TEXT end))
+            track(PW.MouseEnter:Connect(function() CS.Color=C_H; PLbl.TextColor3=C_TEXT end))
+            track(PW.MouseLeave:Connect(function() if not opened then CS.Color=Color3.fromRGB(38,38,44) end; PLbl.TextColor3=C_TEXT end))
             task.spawn(function() cb(color) end)
         end
 
-        -- KEYBIND
+        -- KEYBIND — компактный [KEY] справа от имени
         function W:CreateKeybind(txt, default, cb)
             local key = default or Enum.KeyCode.Unknown
             local binding = false
 
             local KW=Instance.new("Frame")
-            KW.Name=rn(); KW.Size=UDim2.new(1,-20,0,24)
+            KW.Name=rn(); KW.Size=UDim2.new(1,-20,0,22)
             KW.BackgroundTransparency=1; KW.Parent=CF
+
             local KLbl=Instance.new("TextLabel")
-            KLbl.Name=rn(); KLbl.Size=UDim2.new(1,-70,1,0)
+            KLbl.Name=rn(); KLbl.Size=UDim2.new(1,-62,1,0)
+            KLbl.Position=UDim2.new(0,0,0,0)
             KLbl.BackgroundTransparency=1; KLbl.Text=txt
             KLbl.TextColor3=C_TEXT; KLbl.TextSize=12; KLbl.Font=Enum.Font.Gotham
             KLbl.TextXAlignment=Enum.TextXAlignment.Left; KLbl.Parent=KW
 
             local KBtn=Instance.new("TextButton")
-            KBtn.Name=rn(); KBtn.Size=UDim2.new(0,60,0,18)
-            KBtn.Position=UDim2.new(1,-60,0.5,-9)
+            KBtn.Name=rn(); KBtn.Size=UDim2.new(0,58,0,18)
+            KBtn.Position=UDim2.new(1,-58,0.5,-9)
             KBtn.BackgroundColor3=C_BG; KBtn.BorderSizePixel=0
-            KBtn.Text=(key==Enum.KeyCode.Unknown) and "None" or key.Name
-            KBtn.TextColor3=C_DIM; KBtn.TextSize=10; KBtn.Font=Enum.Font.GothamBold; KBtn.Parent=KW
+            KBtn.Text=(key==Enum.KeyCode.Unknown) and "[None]" or "["..key.Name.."]" 
+            KBtn.TextColor3=C_DIM; KBtn.TextSize=9; KBtn.Font=Enum.Font.GothamBold; KBtn.Parent=KW
             local KS=Instance.new("UIStroke"); KS.Color=Color3.fromRGB(38,38,44); KS.Thickness=1; KS.Parent=KBtn
 
             track(KBtn.MouseButton1Click:Connect(function()
-                binding=true; KBtn.Text="..."; KBtn.TextColor3=C_ACCENT; KS.Color=C_ACCENT
+                binding=true; KBtn.Text="[...]" ; KBtn.TextColor3=C_ACCENT; KS.Color=C_ACCENT
             end))
             track(UIS.InputBegan:Connect(function(inp, proc)
                 if binding and not proc and inp.UserInputType==Enum.UserInputType.Keyboard then
                     key=inp.KeyCode; binding=false
-                    KBtn.Text=key.Name; KBtn.TextColor3=C_DIM; KS.Color=Color3.fromRGB(38,38,44)
+                    KBtn.Text="["..key.Name.."]" ; KBtn.TextColor3=C_TEXT; KS.Color=Color3.fromRGB(38,38,44)
                     cb(key)
                 end
             end))
-            track(KW.MouseEnter:Connect(function() KS.Color=C_ACCENT; KLbl.TextColor3=C_ACCENT end))
-            track(KW.MouseLeave:Connect(function() if not binding then KS.Color=Color3.fromRGB(38,38,44) end; KLbl.TextColor3=C_TEXT end))
+            track(KW.MouseEnter:Connect(function() KS.Color=C_H; KLbl.TextColor3=C_TEXT end))
+            track(KW.MouseLeave:Connect(function()
+                if not binding then KS.Color=Color3.fromRGB(38,38,44) end
+                KLbl.TextColor3=C_TEXT
+            end))
             task.spawn(function() if key~=Enum.KeyCode.Unknown then cb(key) end end)
         end
 
@@ -609,7 +694,7 @@ function DeadHub:Init()
             ITB.ClearTextOnFocus=false; ITB.Parent=IBg
             track(ITB.Focused:Connect(function() IS.Color=C_ACCENT; ILbl.TextColor3=C_ACCENT end))
             track(ITB.FocusLost:Connect(function(enter) IS.Color=Color3.fromRGB(38,38,44); ILbl.TextColor3=C_TEXT; cb(ITB.Text, enter) end))
-            track(IW.MouseEnter:Connect(function() IS.Color=C_ACCENT; ILbl.TextColor3=C_ACCENT end))
+            track(IW.MouseEnter:Connect(function() IS.Color=C_H; ILbl.TextColor3=C_TEXT end))
             track(IW.MouseLeave:Connect(function() if not ITB:IsFocused() then IS.Color=Color3.fromRGB(38,38,44); ILbl.TextColor3=C_TEXT end end))
         end
 
