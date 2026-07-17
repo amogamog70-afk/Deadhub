@@ -71,9 +71,9 @@ function DeadHub:Init()
     MainFrame.BorderSizePixel = 0
     MainFrame.Parent = ScreenGui
 
-    -- FIX: Дополнительная внешняя обводка вокруг всего меню изменена на КРАСНЫЙ цвет (по просьбе пользователя)
+    -- Дополнительная внешняя красная обводка вокруг всего меню
     local MenuStroke = Instance.new("UIStroke")
-    MenuStroke.Color = Color_Accent -- Красная рамка
+    MenuStroke.Color = Color_Accent
     MenuStroke.Thickness = 1.2
     MenuStroke.Parent = MainFrame
 
@@ -92,7 +92,20 @@ function DeadHub:Init()
     HeaderBottomLine.BorderSizePixel = 0
     HeaderBottomLine.Parent = Header
 
-    -- Логотип/Заголовок (Строго по центру)
+    -- NEW: Красный прямоугольник вокруг названия DEADHUB в шапке (по просьбе пользователя)
+    local LogoContainer = Instance.new("Frame")
+    LogoContainer.Name = getStealthName()
+    LogoContainer.Size = UDim2.new(0, 100, 0, 20)
+    LogoContainer.Position = UDim2.new(0.5, -50, 0.5, -10)
+    LogoContainer.BackgroundColor3 = Color_Header
+    LogoContainer.BorderSizePixel = 0
+    LogoContainer.Parent = Header
+
+    local LogoStroke = Instance.new("UIStroke")
+    LogoStroke.Color = Color_Accent
+    LogoStroke.Thickness = 1
+    LogoStroke.Parent = LogoContainer
+
     local Logo = Instance.new("TextLabel")
     Logo.Name = getStealthName()
     Logo.Size = UDim2.new(1, 0, 1, 0)
@@ -100,11 +113,11 @@ function DeadHub:Init()
     Logo.BackgroundTransparency = 1
     Logo.Text = "DEADHUB"
     Logo.TextColor3 = Color_Accent
-    Logo.TextSize = 13
+    Logo.TextSize = 11
     Logo.Font = Enum.Font.GothamBold
     Logo.TextXAlignment = Enum.TextXAlignment.Center
     Logo.TextYAlignment = Enum.TextYAlignment.Center
-    Logo.Parent = Header
+    Logo.Parent = LogoContainer
 
     -- ПАНЕЛЬ ВКЛАДОК (Сверху в ряд)
     local TabBar = Instance.new("Frame")
@@ -122,7 +135,7 @@ function DeadHub:Init()
     TabBarBottomLine.BorderSizePixel = 0
     TabBarBottomLine.Parent = MainFrame
 
-    -- ScrollingFrame для вкладок во избежание выхода за края
+    -- ScrollingFrame для вкладок
     local TabsScroll = Instance.new("ScrollingFrame")
     TabsScroll.Name = getStealthName()
     TabsScroll.Size = UDim2.new(1, -125, 1, 0)
@@ -150,12 +163,11 @@ function DeadHub:Init()
     PageContainer.BackgroundTransparency = 1
     PageContainer.Parent = MainFrame
 
-    -- FIX: Вертикальные линии-разделители перенесены на уровень PageContainer.
-    -- Они статичны и ВСЕГДА идут до нижнего края меню, не корректируясь под высоту функций!
+    -- FIX: Точные математические разделительные линии колонок (строго по центру зазоров)
     local DivLine1 = Instance.new("Frame")
     DivLine1.Name = getStealthName()
-    DivLine1.Size = UDim2.new(0, 1, 1, 0) -- Высота 100% от контейнера
-    DivLine1.Position = UDim2.new(0.33, 2, 0, 0)
+    DivLine1.Size = UDim2.new(0, 1, 1, 0)
+    DivLine1.Position = UDim2.new(1/3, -2, 0, 0) -- Ровно по центру левого зазора
     DivLine1.BackgroundColor3 = Color_Border
     DivLine1.BorderSizePixel = 0
     DivLine1.ZIndex = 2
@@ -163,8 +175,8 @@ function DeadHub:Init()
 
     local DivLine2 = Instance.new("Frame")
     DivLine2.Name = getStealthName()
-    DivLine2.Size = UDim2.new(0, 1, 1, 0) -- Высота 100% от контейнера
-    DivLine2.Position = UDim2.new(0.66, 4, 0, 0)
+    DivLine2.Size = UDim2.new(0, 1, 1, 0)
+    DivLine2.Position = UDim2.new(2/3, 2, 0, 0) -- Ровно по центру правого зазора
     DivLine2.BackgroundColor3 = Color_Border
     DivLine2.BorderSizePixel = 0
     DivLine2.ZIndex = 2
@@ -221,7 +233,7 @@ function DeadHub:Init()
     -- Списки вкладок и страниц
     local activeTab = nil
 
-    -- Вспомогательная функция создания окон, чтобы не дублировать код для Settings и обычных вкладок
+    -- Вспомогательная функция создания окон
     local function createGenericWindow(windowTitle, column, LeftCol, MidCol, RightCol)
         local targetColumn = LeftCol
         if column == "Middle" or column == "middle" or column == 2 or column == "Center" then
@@ -527,7 +539,7 @@ function DeadHub:Init()
     SettingsIcon.Size = UDim2.new(0, 14, 0, 14)
     SettingsIcon.Position = UDim2.new(0, 8, 0.5, -7)
     SettingsIcon.BackgroundTransparency = 1
-    SettingsIcon.Image = "rbxassetid://11932591062" -- FIX: Заменена иконка настроек на новую рабочую (11932591062)
+    SettingsIcon.Image = "rbxassetid://11932591062"
     SettingsIcon.ImageColor3 = Color_TextDim
     SettingsIcon.Parent = SettingsBtn
 
@@ -562,25 +574,25 @@ function DeadHub:Init()
     SettingsPage.ScrollingDirection = Enum.ScrollingDirection.Y
     SettingsPage.Parent = PageContainer
 
-    -- Колонки для SettingsPage
+    -- FIX: Колонки для SettingsPage выровнены по точным математическим пропорциям
     local sLeftColumn = Instance.new("Frame")
     sLeftColumn.Name = getStealthName()
-    sLeftColumn.Size = UDim2.new(0.33, -6, 0, 0)
+    sLeftColumn.Size = UDim2.new(1/3, -8, 0, 0)
     sLeftColumn.Position = UDim2.new(0, 0, 0, 0)
     sLeftColumn.BackgroundTransparency = 1
     sLeftColumn.Parent = SettingsPage
 
     local sMiddleColumn = Instance.new("Frame")
     sMiddleColumn.Name = getStealthName()
-    sMiddleColumn.Size = UDim2.new(0.33, -6, 0, 0)
-    sMiddleColumn.Position = UDim2.new(0.33, 5, 0, 0)
+    sMiddleColumn.Size = UDim2.new(1/3, -8, 0, 0)
+    sMiddleColumn.Position = UDim2.new(1/3, 4, 0, 0)
     sMiddleColumn.BackgroundTransparency = 1
     sMiddleColumn.Parent = SettingsPage
 
     local sRightColumn = Instance.new("Frame")
     sRightColumn.Name = getStealthName()
-    sRightColumn.Size = UDim2.new(0.34, -8, 0, 0)
-    sRightColumn.Position = UDim2.new(0.66, 10, 0, 0)
+    sRightColumn.Size = UDim2.new(1/3, -8, 0, 0)
+    sRightColumn.Position = UDim2.new(2/3, 8, 0, 0)
     sRightColumn.BackgroundTransparency = 1
     sRightColumn.Parent = SettingsPage
 
@@ -605,9 +617,9 @@ function DeadHub:Init()
         local rh = sRightList.AbsoluteContentSize.Y
         local maxH = math.max(lh, mh, rh)
         SettingsPage.CanvasSize = UDim2.new(0, 0, 0, maxH + 10)
-        sLeftColumn.Size = UDim2.new(0.33, -6, 0, lh)
-        sMiddleColumn.Size = UDim2.new(0.33, -6, 0, mh)
-        sRightColumn.Size = UDim2.new(0.34, -8, 0, rh)
+        sLeftColumn.Size = UDim2.new(1/3, -8, 0, lh)
+        sMiddleColumn.Size = UDim2.new(1/3, -8, 0, mh)
+        sRightColumn.Size = UDim2.new(1/3, -8, 0, rh)
     end
     sLeftList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateSettingsCanvas)
     sMiddleList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateSettingsCanvas)
@@ -719,28 +731,28 @@ function DeadHub:Init()
         Page.Visible = false
         Page.ScrollBarThickness = 3
         Page.ScrollBarImageColor3 = Color_Border
-        Page.ScrollingDirection = Enum.ScrollingDirection.Y -- Строго вертикальный скролл
+        Page.ScrollingDirection = Enum.ScrollingDirection.Y
         Page.Parent = PageContainer
 
-        -- ТРИ КОЛОНКИ (ESP - WORLD - MISC)
+        -- FIX: Колонки вкладки выровнены по точным математическим пропорциям
         local LeftColumn = Instance.new("Frame")
         LeftColumn.Name = getStealthName()
-        LeftColumn.Size = UDim2.new(0.33, -6, 0, 0)
+        LeftColumn.Size = UDim2.new(1/3, -8, 0, 0)
         LeftColumn.Position = UDim2.new(0, 0, 0, 0)
         LeftColumn.BackgroundTransparency = 1
         LeftColumn.Parent = Page
 
         local MiddleColumn = Instance.new("Frame")
         MiddleColumn.Name = getStealthName()
-        MiddleColumn.Size = UDim2.new(0.33, -6, 0, 0)
-        MiddleColumn.Position = UDim2.new(0.33, 5, 0, 0)
+        MiddleColumn.Size = UDim2.new(1/3, -8, 0, 0)
+        MiddleColumn.Position = UDim2.new(1/3, 4, 0, 0)
         MiddleColumn.BackgroundTransparency = 1
         MiddleColumn.Parent = Page
 
         local RightColumn = Instance.new("Frame")
         RightColumn.Name = getStealthName()
-        RightColumn.Size = UDim2.new(0.34, -8, 0, 0)
-        RightColumn.Position = UDim2.new(0.66, 10, 0, 0)
+        RightColumn.Size = UDim2.new(1/3, -8, 0, 0)
+        RightColumn.Position = UDim2.new(2/3, 8, 0, 0)
         RightColumn.BackgroundTransparency = 1
         RightColumn.Parent = Page
 
@@ -768,9 +780,9 @@ function DeadHub:Init()
             
             Page.CanvasSize = UDim2.new(0, 0, 0, maxHeight + 10)
             
-            LeftColumn.Size = UDim2.new(0.33, -6, 0, leftHeight)
-            MiddleColumn.Size = UDim2.new(0.33, -6, 0, middleHeight)
-            RightColumn.Size = UDim2.new(0.34, -8, 0, rightHeight)
+            LeftColumn.Size = UDim2.new(1/3, -8, 0, leftHeight)
+            MiddleColumn.Size = UDim2.new(1/3, -8, 0, middleHeight)
+            RightColumn.Size = UDim2.new(1/3, -8, 0, rightHeight)
         end
 
         LeftList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateCanvasSize)
