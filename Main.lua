@@ -2,6 +2,7 @@
 -- Исправлена проблема с перетаскиванием (dragAnchor перенесен только на TitleLabel, чтобы не блокировать клики на вкладках)
 -- Заменен ScrollingFrame на обычный Frame для вкладок (решает проблему с CanvasSize и некликабельностью)
 -- Добавлен трехколоночный макет (3 Columns) в стиле предоставленного скриншота
+-- Вручную пересчитывается высота колонок при добавлении элементов во избежание багов рендеринга
 
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
@@ -253,7 +254,7 @@ function Library:Init(config)
         -- Перетаскивание привязано ТОЛЬКО к TitleLabel!
         makeDraggable(InventoryFrame, TitleLabel)
         
-        -- Горизонтальный контейнер вкладок (Обычный Frame вместо ScrollingFrame)
+        -- Горизонтальный контейнер вкладок
         local TabButtonContainer = Instance.new("Frame")
         TabButtonContainer.Name = "TabButtonContainer"
         TabButtonContainer.Size = UDim2.new(1, -20, 0, 28)
@@ -266,10 +267,10 @@ function Library:Init(config)
         TabListLayout.Parent = TabButtonContainer
         TabListLayout.SortOrder = Enum.SortOrder.LayoutOrder
         TabListLayout.FillDirection = Enum.FillDirection.Horizontal
-        TabListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center -- Центрируем вкладки
+        TabListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
         TabListLayout.Padding = UDim.new(0, 24)
         
-        -- Разделительная линия под вкладками (как на фото)
+        -- Разделительная линия под вкладками
         local DividerLine = Instance.new("Frame")
         DividerLine.Name = "DividerLine"
         DividerLine.Size = UDim2.new(1, -20, 0, 1)
@@ -359,11 +360,11 @@ function Library:Init(config)
             CategoryButton.TextSize = 14
             CategoryButton.Parent = TabButtonContainer
             
-            -- Красная линия под выбранной вкладкой
+            -- Линия под вкладкой
             local Indicator = Instance.new("Frame")
             Indicator.Name = "Indicator"
             Indicator.Size = UDim2.new(1, 0, 0, 1.8)
-            Indicator.Position = UDim2.new(0, 0, 1, 6) -- Прямо на разделителе
+            Indicator.Position = UDim2.new(0, 0, 1, 6)
             Indicator.BackgroundColor3 = Theme.Accent
             Indicator.BorderSizePixel = 0
             Indicator.Visible = false
@@ -381,10 +382,10 @@ function Library:Init(config)
             SubFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
             SubFrame.Parent = PageList
             
-            -- 3 Колонки (Левая, Средняя, Правая) с пиксель-перфект разметкой
+            -- 3 Колонки (высота устанавливается динамически в updateScroll во избежание пустых квадратов)
             local LeftColumn = Instance.new("Frame")
             LeftColumn.Name = "LeftColumn"
-            LeftColumn.Size = UDim2.new(0.333, -14, 1, 0)
+            LeftColumn.Size = UDim2.new(0.333, -14, 0, 0)
             LeftColumn.Position = UDim2.new(0, 0, 0, 0)
             LeftColumn.BackgroundTransparency = 1
             LeftColumn.Parent = SubFrame
@@ -396,7 +397,7 @@ function Library:Init(config)
             
             local MiddleColumn = Instance.new("Frame")
             MiddleColumn.Name = "MiddleColumn"
-            MiddleColumn.Size = UDim2.new(0.333, -14, 1, 0)
+            MiddleColumn.Size = UDim2.new(0.333, -14, 0, 0)
             MiddleColumn.Position = UDim2.new(0.333, 7, 0, 0)
             MiddleColumn.BackgroundTransparency = 1
             MiddleColumn.Parent = SubFrame
@@ -408,7 +409,7 @@ function Library:Init(config)
             
             local RightColumn = Instance.new("Frame")
             RightColumn.Name = "RightColumn"
-            RightColumn.Size = UDim2.new(0.333, -14, 1, 0)
+            RightColumn.Size = UDim2.new(0.333, -14, 0, 0)
             RightColumn.Position = UDim2.new(0.666, 14, 0, 0)
             RightColumn.BackgroundTransparency = 1
             RightColumn.Parent = SubFrame
@@ -418,11 +419,18 @@ function Library:Init(config)
             RightLayout.SortOrder = Enum.SortOrder.LayoutOrder
             RightLayout.Padding = UDim.new(0, 14)
             
+            -- Динамический пересчет высоты колонок при изменении содержимого
             local function updateScroll()
                 local leftHeight = LeftLayout.AbsoluteContentSize.Y
                 local rightHeight = RightLayout.AbsoluteContentSize.Y
                 local middleHeight = MiddleLayout.AbsoluteContentSize.Y
                 local maxHeight = math.max(leftHeight, math.max(rightHeight, middleHeight))
+                
+                -- Устанавливаем высоту фреймов колонок равной высоте их содержимого
+                LeftColumn.Size = UDim2.new(0.333, -14, 0, leftHeight)
+                MiddleColumn.Size = UDim2.new(0.333, -14, 0, middleHeight)
+                RightColumn.Size = UDim2.new(0.333, -14, 0, rightHeight)
+                
                 SubFrame.CanvasSize = UDim2.new(0, 0, 0, maxHeight + 30)
             end
             LeftLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateScroll)
@@ -434,7 +442,9 @@ function Library:Init(config)
                     otherTab.Selected = false
                     otherTab.SubFrame.Visible = false
                     otherTab.CategoryButton.TextColor3 = Theme.TextDim
-                    otherTab.CategoryButton.Indicator.Visible = false
+                    
+                    local ind = otherTab.CategoryButton:FindFirstChild("Indicator")
+                    if ind then ind.Visible = false end
                 end
                 Tab.Selected = true
                 SubFrame.Visible = true
@@ -453,7 +463,6 @@ function Library:Init(config)
             function TabController:CreateSection(secName)
                 Tab.SectionsCount = Tab.SectionsCount + 1
                 
-                -- Распределение по 3 колонкам по очереди
                 local targetColumn
                 if Tab.SectionsCount % 3 == 1 then
                     targetColumn = LeftColumn
