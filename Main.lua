@@ -1,7 +1,7 @@
--- [[ deadhub UI Library — LinoriaLib Style Wide Horizontal Edition ]] --
--- Разработано в стиле LinoriaLib: строгий угловатый дизайн,SourceSans шрифт, классические группы (Groupboxes)
--- Все функции и переменные локальны для обхода getgc()
--- Исправлена критическая ошибка с TextAlignment (заменено на TextXAlignment)
+-- [[ deadhub UI Library — LinoriaLib Style Wide 3-Column Edition ]] --
+-- Исправлена проблема с перетаскиванием (dragAnchor перенесен только на TitleLabel, чтобы не блокировать клики на вкладках)
+-- Заменен ScrollingFrame на обычный Frame для вкладок (решает проблему с CanvasSize и некликабельностью)
+-- Добавлен трехколоночный макет (3 Columns) в стиле предоставленного скриншота
 
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
@@ -41,16 +41,16 @@ do
     end
 end
 
--- Цветовая схема: Классический Linoria-стиль (Серый, Черный, Красный)
+-- Цветовая схема: Угловатый Linoria-стиль (Серый, Черный, Красный)
 local Theme = {
-    Background = Color3.fromRGB(20, 20, 20),      -- Основной фон (темно-серый)
-    Header = Color3.fromRGB(15, 15, 15),          -- Задник заголовков и вкладок
-    Card = Color3.fromRGB(24, 24, 24),            -- Внутренний фон групп (Groupboxes)
-    StrokeOuter = Color3.fromRGB(229, 9, 20),     -- Яркий красный внешний контур
-    StrokeInner = Color3.fromRGB(40, 40, 40),     -- Границы элементов и групп
+    Background = Color3.fromRGB(12, 12, 12),      -- Плоский темный фон (как на фото)
+    Header = Color3.fromRGB(12, 12, 12),          -- Тот же цвет для хедера (бесшовный дизайн)
+    Card = Color3.fromRGB(16, 16, 16),            -- Фон групп (Groupboxes)
+    StrokeOuter = Color3.fromRGB(229, 9, 20),     -- Красный внешний контур
+    StrokeInner = Color3.fromRGB(30, 30, 30),     -- Границы элементов и групп
     Accent = Color3.fromRGB(229, 9, 20),          -- Акцентный красный
     Text = Color3.fromRGB(255, 255, 255),         -- Белый текст
-    TextDim = Color3.fromRGB(160, 160, 160)       -- Серый вспомогательный текст
+    TextDim = Color3.fromRGB(150, 150, 150)       -- Серый вспомогательный текст
 }
 
 -- Вспомогательная функция перетаскивания (Draggable)
@@ -170,7 +170,7 @@ function Library:Init(config)
         return DummyWindow
     else
         -- ==========================================
-        -- КЛАССИЧЕСКИЙ LINORIA GUI РЕЖИМ (УГЛОВАТЫЙ)
+        -- КЛАССИЧЕСКИЙ LINORIA GUI РЕЖИМ (3 КОЛОНКИ)
         -- ==========================================
         local UI = {
             CurrentTab = nil,
@@ -188,7 +188,7 @@ function Library:Init(config)
         ScreenGui.IgnoreGuiInset = true
         ScreenGui.Parent = ParentContainer
         
-        -- Главное окно (Строгий прямоугольник)
+        -- Главный фрейм (780 x 500)
         local InventoryFrame = Instance.new("Frame")
         InventoryFrame.Name = "InventoryFrame"
         InventoryFrame.Size = UDim2.new(0, 780, 0, 500)
@@ -199,7 +199,7 @@ function Library:Init(config)
         InventoryFrame.Active = true
         InventoryFrame.Parent = ScreenGui
         
-        -- Внутренний контейнер для двойного бордера
+        -- Внутренняя тонкая рамка
         local InnerContainer = Instance.new("Frame")
         InnerContainer.Name = "InnerContainer"
         InnerContainer.Size = UDim2.new(1, -6, 1, -6)
@@ -209,25 +209,25 @@ function Library:Init(config)
         InnerContainer.BorderColor3 = Theme.StrokeInner
         InnerContainer.Parent = InventoryFrame
         
-        -- Верхняя панель (Header)
+        -- Хедер
         local HeaderFrame = Instance.new("Frame")
         HeaderFrame.Name = "HeaderFrame"
         HeaderFrame.Size = UDim2.new(1, 0, 0, 78)
         HeaderFrame.BackgroundColor3 = Theme.Header
-        HeaderFrame.BorderSizePixel = 1
-        HeaderFrame.BorderColor3 = Theme.StrokeInner
+        HeaderFrame.BorderSizePixel = 0
         HeaderFrame.Parent = InnerContainer
         
-        -- Заголовок по центру (SourceSansBold)
+        -- Название по центру (Служит Drag-якорем, решает проблему блокировки кликов)
         local TitleLabel = Instance.new("TextLabel")
         TitleLabel.Name = "TitleLabel"
-        TitleLabel.Size = UDim2.new(0, 300, 0, 25)
-        TitleLabel.Position = UDim2.new(0.5, -150, 0, 6)
+        TitleLabel.Size = UDim2.new(0, 400, 0, 26)
+        TitleLabel.Position = UDim2.new(0.5, -200, 0, 6)
         TitleLabel.BackgroundTransparency = 1
-        TitleLabel.Text = "deadhub"
-        TitleLabel.TextColor3 = Theme.Accent
+        TitleLabel.Active = true -- Делаем активным для перетаскивания
+        TitleLabel.Text = "deadhub | Trident Survival"
+        TitleLabel.TextColor3 = Theme.Text
         TitleLabel.Font = Enum.Font.SourceSansBold
-        TitleLabel.TextSize = 21
+        TitleLabel.TextSize = 16
         TitleLabel.TextXAlignment = Enum.TextXAlignment.Center
         TitleLabel.Parent = HeaderFrame
         
@@ -240,7 +240,7 @@ function Library:Init(config)
         CloseButton.Text = "[X]"
         CloseButton.TextColor3 = Theme.TextDim
         CloseButton.Font = Enum.Font.SourceSansBold
-        CloseButton.TextSize = 16
+        CloseButton.TextSize = 14
         CloseButton.Parent = HeaderFrame
         
         CloseButton.MouseEnter:Connect(function() CloseButton.TextColor3 = Theme.Accent end)
@@ -250,24 +250,33 @@ function Library:Init(config)
             InventoryFrame.Visible = false
         end)
         
-        makeDraggable(InventoryFrame, HeaderFrame)
+        -- Перетаскивание привязано ТОЛЬКО к TitleLabel!
+        makeDraggable(InventoryFrame, TitleLabel)
         
-        -- Горизонтальный ряд вкладок (Tabs)
-        local TabButtonContainer = Instance.new("ScrollingFrame")
+        -- Горизонтальный контейнер вкладок (Обычный Frame вместо ScrollingFrame)
+        local TabButtonContainer = Instance.new("Frame")
         TabButtonContainer.Name = "TabButtonContainer"
         TabButtonContainer.Size = UDim2.new(1, -20, 0, 28)
-        TabButtonContainer.Position = UDim2.new(0, 10, 0, 38)
+        TabButtonContainer.Position = UDim2.new(0, 10, 0, 36)
         TabButtonContainer.BackgroundTransparency = 1
         TabButtonContainer.BorderSizePixel = 0
-        TabButtonContainer.ScrollBarThickness = 0
-        TabButtonContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
         TabButtonContainer.Parent = HeaderFrame
         
         local TabListLayout = Instance.new("UIListLayout")
         TabListLayout.Parent = TabButtonContainer
         TabListLayout.SortOrder = Enum.SortOrder.LayoutOrder
         TabListLayout.FillDirection = Enum.FillDirection.Horizontal
-        TabListLayout.Padding = UDim.new(0, 4)
+        TabListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center -- Центрируем вкладки
+        TabListLayout.Padding = UDim.new(0, 24)
+        
+        -- Разделительная линия под вкладками (как на фото)
+        local DividerLine = Instance.new("Frame")
+        DividerLine.Name = "DividerLine"
+        DividerLine.Size = UDim2.new(1, -20, 0, 1)
+        DividerLine.Position = UDim2.new(0, 10, 0, 72)
+        DividerLine.BackgroundColor3 = Theme.StrokeInner
+        DividerLine.BorderSizePixel = 0
+        DividerLine.Parent = HeaderFrame
         
         -- Контейнер страниц
         local PageList = Instance.new("Frame")
@@ -277,7 +286,7 @@ function Library:Init(config)
         PageList.BackgroundTransparency = 1
         PageList.Parent = InnerContainer
         
-        -- Переключатель видимости
+        -- Сворачивание
         UserInputService.InputBegan:Connect(function(input, gp)
             if gp then return end
             if input.KeyCode == toggleKey then
@@ -339,20 +348,28 @@ function Library:Init(config)
         function UI:CreateTab(tabName)
             local Tab = { Selected = false, CategoryButton = nil, SubFrame = nil, SectionsCount = 0 }
             
-            -- Кнопка вкладки в стиле Linoria (аккуратные вкладки с рамкой)
+            -- Кнопка вкладки
             local CategoryButton = Instance.new("TextButton")
             CategoryButton.Name = "CategoryButton"
-            CategoryButton.Size = UDim2.new(0, 95, 1, 0)
-            CategoryButton.BackgroundColor3 = Theme.Background
-            CategoryButton.BorderSizePixel = 1
-            CategoryButton.BorderColor3 = Theme.StrokeInner
+            CategoryButton.Size = UDim2.new(0, 80, 1, 0)
+            CategoryButton.BackgroundTransparency = 1
             CategoryButton.Text = tabName
             CategoryButton.TextColor3 = Theme.TextDim
             CategoryButton.Font = Enum.Font.SourceSansBold
-            CategoryButton.TextSize = 13
+            CategoryButton.TextSize = 14
             CategoryButton.Parent = TabButtonContainer
             
-            -- Горизонтальный скролл страницы
+            -- Красная линия под выбранной вкладкой
+            local Indicator = Instance.new("Frame")
+            Indicator.Name = "Indicator"
+            Indicator.Size = UDim2.new(1, 0, 0, 1.8)
+            Indicator.Position = UDim2.new(0, 0, 1, 6) -- Прямо на разделителе
+            Indicator.BackgroundColor3 = Theme.Accent
+            Indicator.BorderSizePixel = 0
+            Indicator.Visible = false
+            Indicator.Parent = CategoryButton
+            
+            -- Контейнер страницы
             local SubFrame = Instance.new("ScrollingFrame")
             SubFrame.Name = "SubFrame"
             SubFrame.Size = UDim2.new(1, 0, 1, 0)
@@ -364,10 +381,11 @@ function Library:Init(config)
             SubFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
             SubFrame.Parent = PageList
             
-            -- Двухколоночный макет
+            -- 3 Колонки (Левая, Средняя, Правая) с пиксель-перфект разметкой
             local LeftColumn = Instance.new("Frame")
             LeftColumn.Name = "LeftColumn"
-            LeftColumn.Size = UDim2.new(0.5, -6, 1, 0)
+            LeftColumn.Size = UDim2.new(0.333, -14, 1, 0)
+            LeftColumn.Position = UDim2.new(0, 0, 0, 0)
             LeftColumn.BackgroundTransparency = 1
             LeftColumn.Parent = SubFrame
             
@@ -376,10 +394,22 @@ function Library:Init(config)
             LeftLayout.SortOrder = Enum.SortOrder.LayoutOrder
             LeftLayout.Padding = UDim.new(0, 14)
             
+            local MiddleColumn = Instance.new("Frame")
+            MiddleColumn.Name = "MiddleColumn"
+            MiddleColumn.Size = UDim2.new(0.333, -14, 1, 0)
+            MiddleColumn.Position = UDim2.new(0.333, 7, 0, 0)
+            MiddleColumn.BackgroundTransparency = 1
+            MiddleColumn.Parent = SubFrame
+            
+            local MiddleLayout = Instance.new("UIListLayout")
+            MiddleLayout.Parent = MiddleColumn
+            MiddleLayout.SortOrder = Enum.SortOrder.LayoutOrder
+            MiddleLayout.Padding = UDim.new(0, 14)
+            
             local RightColumn = Instance.new("Frame")
             RightColumn.Name = "RightColumn"
-            RightColumn.Size = UDim2.new(0.5, -6, 1, 0)
-            RightColumn.Position = UDim2.new(0.5, 6, 0, 0)
+            RightColumn.Size = UDim2.new(0.333, -14, 1, 0)
+            RightColumn.Position = UDim2.new(0.666, 14, 0, 0)
             RightColumn.BackgroundTransparency = 1
             RightColumn.Parent = SubFrame
             
@@ -391,25 +421,25 @@ function Library:Init(config)
             local function updateScroll()
                 local leftHeight = LeftLayout.AbsoluteContentSize.Y
                 local rightHeight = RightLayout.AbsoluteContentSize.Y
-                local maxHeight = math.max(leftHeight, rightHeight)
+                local middleHeight = MiddleLayout.AbsoluteContentSize.Y
+                local maxHeight = math.max(leftHeight, math.max(rightHeight, middleHeight))
                 SubFrame.CanvasSize = UDim2.new(0, 0, 0, maxHeight + 30)
             end
             LeftLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateScroll)
             RightLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateScroll)
+            MiddleLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateScroll)
             
             local function select()
                 for _, otherTab in ipairs(UI.Tabs) do
                     otherTab.Selected = false
                     otherTab.SubFrame.Visible = false
-                    otherTab.CategoryButton.BackgroundColor3 = Theme.Background
                     otherTab.CategoryButton.TextColor3 = Theme.TextDim
-                    otherTab.CategoryButton.BorderColor3 = Theme.StrokeInner
+                    otherTab.CategoryButton.Indicator.Visible = false
                 end
                 Tab.Selected = true
                 SubFrame.Visible = true
-                CategoryButton.BackgroundColor3 = Theme.Card
                 CategoryButton.TextColor3 = Theme.Text
-                CategoryButton.BorderColor3 = Theme.StrokeOuter
+                Indicator.Visible = true
             end
             
             CategoryButton.MouseButton1Click:Connect(select)
@@ -419,14 +449,22 @@ function Library:Init(config)
             
             local TabController = {}
             
-            -- Создание Секции (в стиле классического Groupbox с заголовком на верхней границе)
+            -- Создание Секции (Groupbox)
             function TabController:CreateSection(secName)
                 Tab.SectionsCount = Tab.SectionsCount + 1
-                local targetColumn = (Tab.SectionsCount % 2 == 1) and LeftColumn or RightColumn
+                
+                -- Распределение по 3 колонкам по очереди
+                local targetColumn
+                if Tab.SectionsCount % 3 == 1 then
+                    targetColumn = LeftColumn
+                elseif Tab.SectionsCount % 3 == 2 then
+                    targetColumn = MiddleColumn
+                else
+                    targetColumn = RightColumn
+                end
                 
                 local Section = {}
                 
-                -- Главная рамка Groupbox
                 local CardFrame = Instance.new("Frame")
                 CardFrame.Name = "CardFrame"
                 CardFrame.Size = UDim2.new(1, 0, 0, 40)
@@ -447,11 +485,11 @@ function Library:Init(config)
                 CardPadding.PaddingBottom = UDim.new(0, 10)
                 CardPadding.Parent = CardFrame
                 
-                -- Заголовок группы, перекрывающий рамку (как в LinoriaLib)
+                -- Заголовок группы на границе
                 local GroupHeader = Instance.new("Frame")
                 GroupHeader.Name = "GroupHeader"
                 GroupHeader.Size = UDim2.new(0, 0, 0, 14)
-                GroupHeader.Position = UDim2.new(0, 8, 0, -18) -- Сдвиг вверх на границу
+                GroupHeader.Position = UDim2.new(0, 8, 0, -18)
                 GroupHeader.BackgroundColor3 = Theme.Background
                 GroupHeader.BorderSizePixel = 0
                 GroupHeader.Parent = CardFrame
@@ -467,7 +505,6 @@ function Library:Init(config)
                 CardLabel.TextXAlignment = Enum.TextXAlignment.Left
                 CardLabel.Parent = GroupHeader
                 
-                -- Авто-ширина подложки под текст
                 CardLabel:GetPropertyChangedSignal("TextBounds"):Connect(function()
                     GroupHeader.Size = UDim2.new(0, CardLabel.TextBounds.X, 0, 14)
                     CardLabel.Size = UDim2.new(1, 0, 1, 0)
@@ -513,7 +550,7 @@ function Library:Init(config)
                     end
                 end
                 
-                -- 2. Переключатель (Toggle - Квадратная галочка слева)
+                -- 2. Переключатель (Toggle)
                 function Section:CreateToggle(toggleText, default, callback, keybind)
                     local state = default or false
                     
@@ -524,7 +561,6 @@ function Library:Init(config)
                     SettingsButton.Text = ""
                     SettingsButton.Parent = CardFrame
                     
-                    -- Квадратный бокс
                     local CheckBox = Instance.new("Frame")
                     CheckBox.Name = "CheckBox"
                     CheckBox.Size = UDim2.new(0, 13, 0, 13)
@@ -572,7 +608,7 @@ function Library:Init(config)
                     task.spawn(function() callback(state) end)
                 end
                 
-                -- 3. Ползунок (Slider - Тонкая полоска под текстом)
+                -- 3. Ползунок (Slider)
                 function Section:CreateSlider(sliderText, min, max, default, callback)
                     local current = default or min
                     
@@ -814,7 +850,7 @@ function Library:Init(config)
                     task.spawn(function() callback(current) end)
                 end
                 
-                -- 6. Хоткей биндер (Keybind - маленькие скобки [Key] в углу)
+                -- 6. Хоткей биндер (Keybind)
                 function Section:CreateKeybind(bindText, default, callback)
                     local currentKey = default
                     
