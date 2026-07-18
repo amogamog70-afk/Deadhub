@@ -1,6 +1,7 @@
--- [[ deadhub UI Library — Red-Black-Gray Wide Horizontal Edition ]] --
+-- [[ deadhub UI Library — LinoriaLib Style Wide Horizontal Edition ]] --
+-- Разработано в стиле LinoriaLib: строгий угловатый дизайн,SourceSans шрифт, классические группы (Groupboxes)
 -- Все функции и переменные локальны для обхода getgc()
--- Названия объектов замаскированы под легальные элементы Trident (InventoryFrame, SettingsButton)
+-- Исправлена критическая ошибка с TextAlignment (заменено на TextXAlignment)
 
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
@@ -40,25 +41,17 @@ do
     end
 end
 
--- Цветовая схема: Красно-Черно-Серый акцент
+-- Цветовая схема: Классический Linoria-стиль (Серый, Черный, Красный)
 local Theme = {
-    Background = Color3.fromRGB(8, 8, 8),       -- Глубокий черный
-    Header = Color3.fromRGB(14, 14, 14),        -- Темно-серый
-    Card = Color3.fromRGB(12, 12, 12),          -- Черные карточки
-    StrokeOuter = Color3.fromRGB(229, 9, 20),   -- Красная внешняя обводка
-    StrokeInner = Color3.fromRGB(25, 25, 25),   -- Темно-серая внутренняя обводка
-    Accent = Color3.fromRGB(229, 9, 20),        -- Яркий красный
-    AccentDim = Color3.fromRGB(140, 5, 10),     -- Темно-красный
-    Text = Color3.fromRGB(255, 255, 255),       -- Белый
-    TextDim = Color3.fromRGB(140, 140, 140)     -- Серый
+    Background = Color3.fromRGB(20, 20, 20),      -- Основной фон (темно-серый)
+    Header = Color3.fromRGB(15, 15, 15),          -- Задник заголовков и вкладок
+    Card = Color3.fromRGB(24, 24, 24),            -- Внутренний фон групп (Groupboxes)
+    StrokeOuter = Color3.fromRGB(229, 9, 20),     -- Яркий красный внешний контур
+    StrokeInner = Color3.fromRGB(40, 40, 40),     -- Границы элементов и групп
+    Accent = Color3.fromRGB(229, 9, 20),          -- Акцентный красный
+    Text = Color3.fromRGB(255, 255, 255),         -- Белый текст
+    TextDim = Color3.fromRGB(160, 160, 160)       -- Серый вспомогательный текст
 }
-
--- Вспомогательная функция анимаций
-local function tween(object, info, properties)
-    local anim = TweenService:Create(object, TweenInfo.new(info), properties)
-    anim:Play()
-    return anim
-end
 
 -- Вспомогательная функция перетаскивания (Draggable)
 local function makeDraggable(frame, dragAnchor)
@@ -177,7 +170,7 @@ function Library:Init(config)
         return DummyWindow
     else
         -- ==========================================
-        -- ШИРОКИЙ GUI РЕЖИМ (КРАСНО-ЧЕРНО-СЕРЫЙ С ВЕРХНИМ МЕНЮ)
+        -- КЛАССИЧЕСКИЙ LINORIA GUI РЕЖИМ (УГЛОВАТЫЙ)
         -- ==========================================
         local UI = {
             CurrentTab = nil,
@@ -195,92 +188,63 @@ function Library:Init(config)
         ScreenGui.IgnoreGuiInset = true
         ScreenGui.Parent = ParentContainer
         
-        -- Главное окно увеличено до 780x500
+        -- Главное окно (Строгий прямоугольник)
         local InventoryFrame = Instance.new("Frame")
         InventoryFrame.Name = "InventoryFrame"
         InventoryFrame.Size = UDim2.new(0, 780, 0, 500)
         InventoryFrame.Position = UDim2.new(0.5, -390, 0.5, -250)
         InventoryFrame.BackgroundColor3 = Theme.Background
-        InventoryFrame.BorderSizePixel = 0
+        InventoryFrame.BorderSizePixel = 1
+        InventoryFrame.BorderColor3 = Theme.StrokeOuter
         InventoryFrame.Active = true
         InventoryFrame.Parent = ScreenGui
         
-        local InventoryFrameCorner = Instance.new("UICorner")
-        InventoryFrameCorner.CornerRadius = UDim.new(0, 6)
-        InventoryFrameCorner.Parent = InventoryFrame
-        
-        -- Красная внешняя обводка
-        local InventoryFrameStroke = Instance.new("UIStroke")
-        InventoryFrameStroke.Color = Theme.StrokeOuter
-        InventoryFrameStroke.Thickness = 1.8
-        InventoryFrameStroke.Parent = InventoryFrame
-        
-        -- Внутренний контейнер для эффекта двойной обводки
+        -- Внутренний контейнер для двойного бордера
         local InnerContainer = Instance.new("Frame")
         InnerContainer.Name = "InnerContainer"
         InnerContainer.Size = UDim2.new(1, -6, 1, -6)
         InnerContainer.Position = UDim2.new(0, 3, 0, 3)
         InnerContainer.BackgroundColor3 = Theme.Background
-        InnerContainer.BorderSizePixel = 0
+        InnerContainer.BorderSizePixel = 1
+        InnerContainer.BorderColor3 = Theme.StrokeInner
         InnerContainer.Parent = InventoryFrame
         
-        local InnerCorner = Instance.new("UICorner")
-        InnerCorner.CornerRadius = UDim.new(0, 4)
-        InnerCorner.Parent = InnerContainer
-        
-        local InnerStroke = Instance.new("UIStroke")
-        InnerStroke.Color = Theme.StrokeInner
-        InnerStroke.Thickness = 1.2
-        InnerStroke.Parent = InnerContainer
-        
-        -- Верхний хедер
+        -- Верхняя панель (Header)
         local HeaderFrame = Instance.new("Frame")
         HeaderFrame.Name = "HeaderFrame"
-        HeaderFrame.Size = UDim2.new(1, 0, 0, 82)
+        HeaderFrame.Size = UDim2.new(1, 0, 0, 78)
         HeaderFrame.BackgroundColor3 = Theme.Header
-        HeaderFrame.BorderSizePixel = 0
+        HeaderFrame.BorderSizePixel = 1
+        HeaderFrame.BorderColor3 = Theme.StrokeInner
         HeaderFrame.Parent = InnerContainer
         
-        local HeaderFrameCorner = Instance.new("UICorner")
-        HeaderFrameCorner.CornerRadius = UDim.new(0, 4)
-        HeaderFrameCorner.Parent = HeaderFrame
-        
-        -- Скрытие нижних закруглений у хедера
-        local HeaderFix = Instance.new("Frame")
-        HeaderFix.Name = "HeaderFix"
-        HeaderFix.Size = UDim2.new(1, 0, 0, 10)
-        HeaderFix.Position = UDim2.new(0, 0, 1, -10)
-        HeaderFix.BackgroundColor3 = Theme.Header
-        HeaderFix.BorderSizePixel = 0
-        HeaderFix.Parent = HeaderFrame
-        
-        -- Название по центру
+        -- Заголовок по центру (SourceSansBold)
         local TitleLabel = Instance.new("TextLabel")
         TitleLabel.Name = "TitleLabel"
-        TitleLabel.Size = UDim2.new(0, 300, 0, 30)
-        TitleLabel.Position = UDim2.new(0.5, -150, 0, 8)
+        TitleLabel.Size = UDim2.new(0, 300, 0, 25)
+        TitleLabel.Position = UDim2.new(0.5, -150, 0, 6)
         TitleLabel.BackgroundTransparency = 1
         TitleLabel.Text = "deadhub"
         TitleLabel.TextColor3 = Theme.Accent
-        TitleLabel.Font = Enum.Font.GothamBold
-        TitleLabel.TextSize = 20
-        TitleLabel.TextAlignment = Enum.TextAlignment.Center
+        TitleLabel.Font = Enum.Font.SourceSansBold
+        TitleLabel.TextSize = 21
+        TitleLabel.TextXAlignment = Enum.TextXAlignment.Center
         TitleLabel.Parent = HeaderFrame
         
-        -- Кнопка закрытия справа вверху
+        -- Кнопка закрытия [X]
         local CloseButton = Instance.new("TextButton")
         CloseButton.Name = "CloseButton"
         CloseButton.Size = UDim2.new(0, 24, 0, 24)
-        CloseButton.Position = UDim2.new(1, -30, 0, 8)
+        CloseButton.Position = UDim2.new(1, -28, 0, 6)
         CloseButton.BackgroundTransparency = 1
-        CloseButton.Text = "×"
+        CloseButton.Text = "[X]"
         CloseButton.TextColor3 = Theme.TextDim
-        CloseButton.Font = Enum.Font.GothamBold
-        CloseButton.TextSize = 22
+        CloseButton.Font = Enum.Font.SourceSansBold
+        CloseButton.TextSize = 16
         CloseButton.Parent = HeaderFrame
         
-        CloseButton.MouseEnter:Connect(function() tween(CloseButton, 0.15, {TextColor3 = Theme.Accent}) end)
-        CloseButton.MouseLeave:Connect(function() tween(CloseButton, 0.15, {TextColor3 = Theme.TextDim}) end)
+        CloseButton.MouseEnter:Connect(function() CloseButton.TextColor3 = Theme.Accent end)
+        CloseButton.MouseLeave:Connect(function() CloseButton.TextColor3 = Theme.TextDim end)
         CloseButton.MouseButton1Click:Connect(function()
             UI.Visible = false
             InventoryFrame.Visible = false
@@ -288,11 +252,11 @@ function Library:Init(config)
         
         makeDraggable(InventoryFrame, HeaderFrame)
         
-        -- Горизонтальный контейнер вкладок снизу под названием
+        -- Горизонтальный ряд вкладок (Tabs)
         local TabButtonContainer = Instance.new("ScrollingFrame")
         TabButtonContainer.Name = "TabButtonContainer"
-        TabButtonContainer.Size = UDim2.new(1, -30, 0, 32)
-        TabButtonContainer.Position = UDim2.new(0, 15, 0, 42)
+        TabButtonContainer.Size = UDim2.new(1, -20, 0, 28)
+        TabButtonContainer.Position = UDim2.new(0, 10, 0, 38)
         TabButtonContainer.BackgroundTransparency = 1
         TabButtonContainer.BorderSizePixel = 0
         TabButtonContainer.ScrollBarThickness = 0
@@ -303,26 +267,17 @@ function Library:Init(config)
         TabListLayout.Parent = TabButtonContainer
         TabListLayout.SortOrder = Enum.SortOrder.LayoutOrder
         TabListLayout.FillDirection = Enum.FillDirection.Horizontal
-        TabListLayout.Padding = UDim.new(0, 12)
+        TabListLayout.Padding = UDim.new(0, 4)
         
-        -- Полоска акцента на границе хедера
-        local AccentLine = Instance.new("Frame")
-        AccentLine.Name = "AccentLine"
-        AccentLine.Size = UDim2.new(1, 0, 0, 1)
-        AccentLine.Position = UDim2.new(0, 0, 1, 0)
-        AccentLine.BackgroundColor3 = Theme.StrokeInner
-        AccentLine.BorderSizePixel = 0
-        AccentLine.Parent = HeaderFrame
-        
-        -- Контейнер для страниц
+        -- Контейнер страниц
         local PageList = Instance.new("Frame")
         PageList.Name = "PageList"
-        PageList.Size = UDim2.new(1, -24, 1, -96)
-        PageList.Position = UDim2.new(0, 12, 0, 90)
+        PageList.Size = UDim2.new(1, -20, 1, -92)
+        PageList.Position = UDim2.new(0, 10, 0, 84)
         PageList.BackgroundTransparency = 1
         PageList.Parent = InnerContainer
         
-        -- Сворачивание
+        -- Переключатель видимости
         UserInputService.InputBegan:Connect(function(input, gp)
             if gp then return end
             if input.KeyCode == toggleKey then
@@ -336,61 +291,47 @@ function Library:Init(config)
             duration = duration or 3
             local Toast = Instance.new("Frame")
             Toast.Name = "ToastFrame"
-            Toast.Size = UDim2.new(0, 240, 0, 55)
-            Toast.Position = UDim2.new(1, 10, 1, -70)
-            Toast.BackgroundColor3 = Theme.Header
-            Toast.BorderSizePixel = 0
+            Toast.Size = UDim2.new(0, 240, 0, 52)
+            Toast.Position = UDim2.new(1, -250, 1, -65)
+            Toast.BackgroundColor3 = Theme.Background
+            Toast.BorderSizePixel = 1
+            Toast.BorderColor3 = Theme.StrokeOuter
             Toast.Parent = ScreenGui
             
-            local ToastCorner = Instance.new("UICorner")
-            ToastCorner.CornerRadius = UDim.new(0, 6)
-            ToastCorner.Parent = Toast
-            
-            local ToastStroke = Instance.new("UIStroke")
-            ToastStroke.Color = Theme.StrokeOuter
-            ToastStroke.Thickness = 1.2
-            ToastStroke.Parent = Toast
-            
-            local GlowLine = Instance.new("Frame")
-            GlowLine.Name = "GlowLine"
-            GlowLine.Size = UDim2.new(0, 3, 1, 0)
-            GlowLine.BackgroundColor3 = Theme.Accent
-            GlowLine.BorderSizePixel = 0
-            GlowLine.Parent = Toast
-            
-            local GlowLineCorner = Instance.new("UICorner")
-            GlowLineCorner.CornerRadius = UDim.new(0, 6)
-            GlowLineCorner.Parent = GlowLine
+            local InnerToast = Instance.new("Frame")
+            InnerToast.Size = UDim2.new(1, -4, 1, -4)
+            InnerToast.Position = UDim2.new(0, 2, 0, 2)
+            InnerToast.BackgroundColor3 = Theme.Background
+            InnerToast.BorderSizePixel = 1
+            InnerToast.BorderColor3 = Theme.StrokeInner
+            InnerToast.Parent = Toast
             
             local ToastTitle = Instance.new("TextLabel")
             ToastTitle.Name = "Title"
-            ToastTitle.Size = UDim2.new(1, -20, 0, 20)
-            ToastTitle.Position = UDim2.new(0, 12, 0, 8)
+            ToastTitle.Size = UDim2.new(1, -16, 0, 18)
+            ToastTitle.Position = UDim2.new(0, 8, 0, 4)
             ToastTitle.BackgroundTransparency = 1
             ToastTitle.Text = title
             ToastTitle.TextColor3 = Theme.Accent
-            ToastTitle.Font = Enum.Font.GothamBold
-            ToastTitle.TextSize = 12
+            ToastTitle.Font = Enum.Font.SourceSansBold
+            ToastTitle.TextSize = 14
             ToastTitle.TextXAlignment = Enum.TextXAlignment.Left
-            ToastTitle.Parent = Toast
+            ToastTitle.Parent = InnerToast
             
             local ToastDesc = Instance.new("TextLabel")
             ToastDesc.Name = "Desc"
-            ToastDesc.Size = UDim2.new(1, -20, 0, 20)
-            ToastDesc.Position = UDim2.new(0, 12, 0, 25)
+            ToastDesc.Size = UDim2.new(1, -16, 0, 18)
+            ToastDesc.Position = UDim2.new(0, 8, 0, 22)
             ToastDesc.BackgroundTransparency = 1
             ToastDesc.Text = text
-            ToastDesc.TextColor3 = Theme.TextDim
-            ToastDesc.Font = Enum.Font.Gotham
-            ToastDesc.TextSize = 10
+            ToastDesc.TextColor3 = Theme.Text
+            ToastDesc.Font = Enum.Font.SourceSans
+            ToastDesc.TextSize = 13
             ToastDesc.TextXAlignment = Enum.TextXAlignment.Left
-            ToastDesc.Parent = Toast
-            
-            tween(Toast, 0.35, {Position = UDim2.new(1, -250, 1, -70)})
+            ToastDesc.Parent = InnerToast
             
             task.delay(duration, function()
-                local t = tween(Toast, 0.35, {Position = UDim2.new(1, 10, 1, -70)})
-                t.Completed:Connect(function() Toast:Destroy() end)
+                Toast:Destroy()
             end)
         end
         
@@ -398,39 +339,32 @@ function Library:Init(config)
         function UI:CreateTab(tabName)
             local Tab = { Selected = false, CategoryButton = nil, SubFrame = nil, SectionsCount = 0 }
             
-            -- Кнопка вкладки
+            -- Кнопка вкладки в стиле Linoria (аккуратные вкладки с рамкой)
             local CategoryButton = Instance.new("TextButton")
             CategoryButton.Name = "CategoryButton"
             CategoryButton.Size = UDim2.new(0, 95, 1, 0)
-            CategoryButton.BackgroundTransparency = 1
+            CategoryButton.BackgroundColor3 = Theme.Background
+            CategoryButton.BorderSizePixel = 1
+            CategoryButton.BorderColor3 = Theme.StrokeInner
             CategoryButton.Text = tabName
             CategoryButton.TextColor3 = Theme.TextDim
-            CategoryButton.Font = Enum.Font.GothamBold
-            CategoryButton.TextSize = 12
+            CategoryButton.Font = Enum.Font.SourceSansBold
+            CategoryButton.TextSize = 13
             CategoryButton.Parent = TabButtonContainer
             
-            local Underline = Instance.new("Frame")
-            Underline.Name = "Underline"
-            Underline.Size = UDim2.new(0.6, 0, 0, 2)
-            Underline.Position = UDim2.new(0.2, 0, 1, -2)
-            Underline.BackgroundColor3 = Theme.Accent
-            Underline.BorderSizePixel = 0
-            Underline.BackgroundTransparency = 1
-            Underline.Parent = CategoryButton
-            
-            -- Двухколонный макет для размещения карточек секций
+            -- Горизонтальный скролл страницы
             local SubFrame = Instance.new("ScrollingFrame")
             SubFrame.Name = "SubFrame"
             SubFrame.Size = UDim2.new(1, 0, 1, 0)
             SubFrame.BackgroundTransparency = 1
             SubFrame.BorderSizePixel = 0
-            SubFrame.ScrollBarThickness = 2
-            SubFrame.ScrollBarImageColor3 = Theme.StrokeInner
+            SubFrame.ScrollBarThickness = 3
+            SubFrame.ScrollBarImageColor3 = Theme.StrokeOuter
             SubFrame.Visible = false
             SubFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
             SubFrame.Parent = PageList
             
-            -- Левая колонка
+            -- Двухколоночный макет
             local LeftColumn = Instance.new("Frame")
             LeftColumn.Name = "LeftColumn"
             LeftColumn.Size = UDim2.new(0.5, -6, 1, 0)
@@ -440,9 +374,8 @@ function Library:Init(config)
             local LeftLayout = Instance.new("UIListLayout")
             LeftLayout.Parent = LeftColumn
             LeftLayout.SortOrder = Enum.SortOrder.LayoutOrder
-            LeftLayout.Padding = UDim.new(0, 12)
+            LeftLayout.Padding = UDim.new(0, 14)
             
-            -- Правая колонка
             local RightColumn = Instance.new("Frame")
             RightColumn.Name = "RightColumn"
             RightColumn.Size = UDim2.new(0.5, -6, 1, 0)
@@ -453,32 +386,30 @@ function Library:Init(config)
             local RightLayout = Instance.new("UIListLayout")
             RightLayout.Parent = RightColumn
             RightLayout.SortOrder = Enum.SortOrder.LayoutOrder
-            RightLayout.Padding = UDim.new(0, 12)
+            RightLayout.Padding = UDim.new(0, 14)
             
-            -- Автоматический скролл по высоте контента
             local function updateScroll()
                 local leftHeight = LeftLayout.AbsoluteContentSize.Y
                 local rightHeight = RightLayout.AbsoluteContentSize.Y
                 local maxHeight = math.max(leftHeight, rightHeight)
-                SubFrame.CanvasSize = UDim2.new(0, 0, 0, maxHeight + 20)
+                SubFrame.CanvasSize = UDim2.new(0, 0, 0, maxHeight + 30)
             end
             LeftLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateScroll)
             RightLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateScroll)
-            
-            Tab.CategoryButton = CategoryButton
-            Tab.SubFrame = SubFrame
             
             local function select()
                 for _, otherTab in ipairs(UI.Tabs) do
                     otherTab.Selected = false
                     otherTab.SubFrame.Visible = false
-                    tween(otherTab.CategoryButton, 0.15, {TextColor3 = Theme.TextDim})
-                    tween(otherTab.CategoryButton.Underline, 0.15, {BackgroundTransparency = 1})
+                    otherTab.CategoryButton.BackgroundColor3 = Theme.Background
+                    otherTab.CategoryButton.TextColor3 = Theme.TextDim
+                    otherTab.CategoryButton.BorderColor3 = Theme.StrokeInner
                 end
                 Tab.Selected = true
                 SubFrame.Visible = true
-                tween(CategoryButton, 0.15, {TextColor3 = Theme.Text})
-                tween(Underline, 0.15, {BackgroundTransparency = 0})
+                CategoryButton.BackgroundColor3 = Theme.Card
+                CategoryButton.TextColor3 = Theme.Text
+                CategoryButton.BorderColor3 = Theme.StrokeOuter
             end
             
             CategoryButton.MouseButton1Click:Connect(select)
@@ -488,29 +419,21 @@ function Library:Init(config)
             
             local TabController = {}
             
-            -- Создание Секции
+            -- Создание Секции (в стиле классического Groupbox с заголовком на верхней границе)
             function TabController:CreateSection(secName)
                 Tab.SectionsCount = Tab.SectionsCount + 1
-                
                 local targetColumn = (Tab.SectionsCount % 2 == 1) and LeftColumn or RightColumn
                 
                 local Section = {}
                 
+                -- Главная рамка Groupbox
                 local CardFrame = Instance.new("Frame")
                 CardFrame.Name = "CardFrame"
-                CardFrame.Size = UDim2.new(1, 0, 0, 30)
+                CardFrame.Size = UDim2.new(1, 0, 0, 40)
                 CardFrame.BackgroundColor3 = Theme.Card
-                CardFrame.BorderSizePixel = 0
+                CardFrame.BorderSizePixel = 1
+                CardFrame.BorderColor3 = Theme.StrokeInner
                 CardFrame.Parent = targetColumn
-                
-                local CardCorner = Instance.new("UICorner")
-                CardCorner.CornerRadius = UDim.new(0, 4)
-                CardCorner.Parent = CardFrame
-                
-                local CardStroke = Instance.new("UIStroke")
-                CardStroke.Color = Theme.StrokeInner
-                CardStroke.Thickness = 1
-                CardStroke.Parent = CardFrame
                 
                 local CardList = Instance.new("UIListLayout")
                 CardList.Parent = CardFrame
@@ -518,22 +441,37 @@ function Library:Init(config)
                 CardList.Padding = UDim.new(0, 8)
                 
                 local CardPadding = Instance.new("UIPadding")
-                CardPadding.PaddingLeft = UDim.new(0, 12)
-                CardPadding.PaddingRight = UDim.new(0, 12)
-                CardPadding.PaddingTop = UDim.new(0, 10)
-                CardPadding.PaddingBottom = UDim.new(0, 12)
+                CardPadding.PaddingLeft = UDim.new(0, 10)
+                CardPadding.PaddingRight = UDim.new(0, 10)
+                CardPadding.PaddingTop = UDim.new(0, 12)
+                CardPadding.PaddingBottom = UDim.new(0, 10)
                 CardPadding.Parent = CardFrame
+                
+                -- Заголовок группы, перекрывающий рамку (как в LinoriaLib)
+                local GroupHeader = Instance.new("Frame")
+                GroupHeader.Name = "GroupHeader"
+                GroupHeader.Size = UDim2.new(0, 0, 0, 14)
+                GroupHeader.Position = UDim2.new(0, 8, 0, -18) -- Сдвиг вверх на границу
+                GroupHeader.BackgroundColor3 = Theme.Background
+                GroupHeader.BorderSizePixel = 0
+                GroupHeader.Parent = CardFrame
                 
                 local CardLabel = Instance.new("TextLabel")
                 CardLabel.Name = "CardLabel"
-                CardLabel.Size = UDim2.new(1, 0, 0, 18)
+                CardLabel.Size = UDim2.new(0, 0, 1, 0)
                 CardLabel.BackgroundTransparency = 1
-                CardLabel.Text = string.upper(secName)
+                CardLabel.Text = " " .. string.upper(secName) .. " "
                 CardLabel.TextColor3 = Theme.Accent
-                CardLabel.Font = Enum.Font.GothamBold
-                CardLabel.TextSize = 10
+                CardLabel.Font = Enum.Font.SourceSansBold
+                CardLabel.TextSize = 13
                 CardLabel.TextXAlignment = Enum.TextXAlignment.Left
-                CardLabel.Parent = CardFrame
+                CardLabel.Parent = GroupHeader
+                
+                -- Авто-ширина подложки под текст
+                CardLabel:GetPropertyChangedSignal("TextBounds"):Connect(function()
+                    GroupHeader.Size = UDim2.new(0, CardLabel.TextBounds.X, 0, 14)
+                    CardLabel.Size = UDim2.new(1, 0, 1, 0)
+                end)
                 
                 local function resizeCard()
                     CardFrame.Size = UDim2.new(1, 0, 0, CardList.AbsoluteContentSize.Y + 22)
@@ -541,35 +479,28 @@ function Library:Init(config)
                 CardList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(resizeCard)
                 
                 -- ==========================================
-                -- ЭЛЕМЕНТЫ ВВОДА (INPUT ELEMENTS)
+                -- ЭЛЕМЕНТЫ ВВОДА (LINORIA STYLE)
                 -- ==========================================
                 
                 -- 1. Кнопка (Button)
                 function Section:CreateButton(btnText, callback, keybind)
                     local ActionButton = Instance.new("TextButton")
                     ActionButton.Name = "ActionButton"
-                    ActionButton.Size = UDim2.new(1, 0, 0, 28)
-                    ActionButton.BackgroundColor3 = Theme.StrokeInner
+                    ActionButton.Size = UDim2.new(1, 0, 0, 24)
+                    ActionButton.BackgroundColor3 = Theme.Background
+                    ActionButton.BorderSizePixel = 1
+                    ActionButton.BorderColor3 = Theme.StrokeInner
                     ActionButton.Text = btnText
                     ActionButton.TextColor3 = Theme.Text
-                    ActionButton.Font = Enum.Font.GothamMedium
-                    ActionButton.TextSize = 12
+                    ActionButton.Font = Enum.Font.SourceSans
+                    ActionButton.TextSize = 13
                     ActionButton.Parent = CardFrame
                     
-                    local ActionCorner = Instance.new("UICorner")
-                    ActionCorner.CornerRadius = UDim.new(0, 4)
-                    ActionCorner.Parent = ActionButton
-                    
-                    local ActionStroke = Instance.new("UIStroke")
-                    ActionStroke.Color = Theme.StrokeInner
-                    ActionStroke.Thickness = 0.8
-                    ActionStroke.Parent = ActionButton
-                    
                     ActionButton.MouseEnter:Connect(function()
-                        tween(ActionButton, 0.15, {BackgroundColor3 = Theme.Accent})
+                        ActionButton.BorderColor3 = Theme.StrokeOuter
                     end)
                     ActionButton.MouseLeave:Connect(function()
-                        tween(ActionButton, 0.15, {BackgroundColor3 = Theme.StrokeInner})
+                        ActionButton.BorderColor3 = Theme.StrokeInner
                     end)
                     ActionButton.MouseButton1Click:Connect(callback)
                     
@@ -582,56 +513,43 @@ function Library:Init(config)
                     end
                 end
                 
-                -- 2. Переключатель (Toggle)
+                -- 2. Переключатель (Toggle - Квадратная галочка слева)
                 function Section:CreateToggle(toggleText, default, callback, keybind)
                     local state = default or false
                     
                     local SettingsButton = Instance.new("TextButton")
                     SettingsButton.Name = "SettingsButton"
-                    SettingsButton.Size = UDim2.new(1, 0, 0, 26)
+                    SettingsButton.Size = UDim2.new(1, 0, 0, 20)
                     SettingsButton.BackgroundTransparency = 1
                     SettingsButton.Text = ""
                     SettingsButton.Parent = CardFrame
                     
+                    -- Квадратный бокс
+                    local CheckBox = Instance.new("Frame")
+                    CheckBox.Name = "CheckBox"
+                    CheckBox.Size = UDim2.new(0, 13, 0, 13)
+                    CheckBox.Position = UDim2.new(0, 0, 0.5, -6)
+                    CheckBox.BackgroundColor3 = state and Theme.Accent or Theme.Background
+                    CheckBox.BorderSizePixel = 1
+                    CheckBox.BorderColor3 = state and Theme.Accent or Theme.StrokeInner
+                    CheckBox.Parent = SettingsButton
+                    
                     local ToggleLabel = Instance.new("TextLabel")
                     ToggleLabel.Name = "ToggleLabel"
-                    ToggleLabel.Size = UDim2.new(0.7, 0, 1, 0)
+                    ToggleLabel.Size = UDim2.new(1, -22, 1, 0)
+                    ToggleLabel.Position = UDim2.new(0, 20, 0, 0)
                     ToggleLabel.BackgroundTransparency = 1
                     ToggleLabel.Text = toggleText
-                    ToggleLabel.TextColor3 = Theme.TextDim
-                    ToggleLabel.Font = Enum.Font.GothamMedium
-                    ToggleLabel.TextSize = 12
+                    ToggleLabel.TextColor3 = state and Theme.Text or Theme.TextDim
+                    ToggleLabel.Font = Enum.Font.SourceSans
+                    ToggleLabel.TextSize = 13
                     ToggleLabel.TextXAlignment = Enum.TextXAlignment.Left
                     ToggleLabel.Parent = SettingsButton
                     
-                    local StatusIndicator = Instance.new("Frame")
-                    StatusIndicator.Name = "StatusIndicator"
-                    StatusIndicator.Size = UDim2.new(0, 32, 0, 16)
-                    StatusIndicator.Position = UDim2.new(1, -32, 0.5, -8)
-                    StatusIndicator.BackgroundColor3 = state and Theme.Accent or Theme.StrokeInner
-                    StatusIndicator.BorderSizePixel = 0
-                    StatusIndicator.Parent = SettingsButton
-                    
-                    local IndicatorCorner = Instance.new("UICorner")
-                    IndicatorCorner.CornerRadius = UDim.new(1, 0)
-                    IndicatorCorner.Parent = StatusIndicator
-                    
-                    local SliderDot = Instance.new("Frame")
-                    SliderDot.Name = "SliderDot"
-                    SliderDot.Size = UDim2.new(0, 12, 0, 12)
-                    SliderDot.Position = UDim2.new(0, state and 18 or 2, 0.5, -6)
-                    SliderDot.BackgroundColor3 = Theme.Text
-                    SliderDot.BorderSizePixel = 0
-                    SliderDot.Parent = StatusIndicator
-                    
-                    local DotCorner = Instance.new("UICorner")
-                    DotCorner.CornerRadius = UDim.new(1, 0)
-                    DotCorner.Parent = SliderDot
-                    
                     local function update()
-                        tween(StatusIndicator, 0.15, {BackgroundColor3 = state and Theme.Accent or Theme.StrokeInner})
-                        tween(SliderDot, 0.15, {Position = UDim2.new(0, state and 18 or 2, 0.5, -6)})
-                        tween(ToggleLabel, 0.15, {TextColor3 = state and Theme.Text or Theme.TextDim})
+                        CheckBox.BackgroundColor3 = state and Theme.Accent or Theme.Background
+                        CheckBox.BorderColor3 = state and Theme.Accent or Theme.StrokeInner
+                        ToggleLabel.TextColor3 = state and Theme.Text or Theme.TextDim
                         callback(state)
                     end
                     
@@ -654,13 +572,13 @@ function Library:Init(config)
                     task.spawn(function() callback(state) end)
                 end
                 
-                -- 3. Ползунок (Slider)
+                -- 3. Ползунок (Slider - Тонкая полоска под текстом)
                 function Section:CreateSlider(sliderText, min, max, default, callback)
                     local current = default or min
                     
                     local SliderContainer = Instance.new("Frame")
                     SliderContainer.Name = "SliderContainer"
-                    SliderContainer.Size = UDim2.new(1, 0, 0, 36)
+                    SliderContainer.Size = UDim2.new(1, 0, 0, 32)
                     SliderContainer.BackgroundTransparency = 1
                     SliderContainer.Parent = CardFrame
                     
@@ -670,35 +588,32 @@ function Library:Init(config)
                     SliderLabel.BackgroundTransparency = 1
                     SliderLabel.Text = sliderText
                     SliderLabel.TextColor3 = Theme.TextDim
-                    SliderLabel.Font = Enum.Font.GothamMedium
-                    SliderLabel.TextSize = 11
+                    SliderLabel.Font = Enum.Font.SourceSans
+                    SliderLabel.TextSize = 13
                     SliderLabel.TextXAlignment = Enum.TextXAlignment.Left
                     SliderLabel.Parent = SliderContainer
                     
                     local ValueLabel = Instance.new("TextLabel")
                     ValueLabel.Name = "ValueLabel"
-                    ValueLabel.Size = UDim2.new(0.25, 0, 0, 16)
-                    ValueLabel.Position = UDim2.new(0.75, 0, 0, 0)
+                    ValueLabel.Size = UDim2.new(0.28, 0, 0, 16)
+                    ValueLabel.Position = UDim2.new(0.72, 0, 0, 0)
                     ValueLabel.BackgroundTransparency = 1
                     ValueLabel.Text = tostring(current)
-                    ValueLabel.TextColor3 = Theme.Accent
-                    ValueLabel.Font = Enum.Font.GothamBold
-                    ValueLabel.TextSize = 11
+                    ValueLabel.TextColor3 = Theme.Text
+                    ValueLabel.Font = Enum.Font.SourceSansBold
+                    ValueLabel.TextSize = 13
                     ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
                     ValueLabel.Parent = SliderContainer
                     
                     local Track = Instance.new("TextButton")
                     Track.Name = "Track"
-                    Track.Size = UDim2.new(1, 0, 0, 6)
-                    Track.Position = UDim2.new(0, 0, 0.7, 0)
-                    Track.BackgroundColor3 = Theme.StrokeInner
-                    Track.BorderSizePixel = 0
+                    Track.Size = UDim2.new(1, 0, 0, 8)
+                    Track.Position = UDim2.new(0, 0, 0, 18)
+                    Track.BackgroundColor3 = Theme.Background
+                    Track.BorderSizePixel = 1
+                    Track.BorderColor3 = Theme.StrokeInner
                     Track.Text = ""
                     Track.Parent = SliderContainer
-                    
-                    local TrackCorner = Instance.new("UICorner")
-                    TrackCorner.CornerRadius = UDim.new(1, 0)
-                    TrackCorner.Parent = Track
                     
                     local ProgressBar = Instance.new("Frame")
                     ProgressBar.Name = "ProgressBar"
@@ -706,10 +621,6 @@ function Library:Init(config)
                     ProgressBar.BackgroundColor3 = Theme.Accent
                     ProgressBar.BorderSizePixel = 0
                     ProgressBar.Parent = Track
-                    
-                    local ProgressCorner = Instance.new("UICorner")
-                    ProgressCorner.CornerRadius = UDim.new(1, 0)
-                    ProgressCorner.Parent = ProgressBar
                     
                     local function update(input)
                         local pos = math.clamp((input.Position.X - Track.AbsolutePosition.X) / Track.AbsoluteSize.X, 0, 1)
@@ -742,11 +653,11 @@ function Library:Init(config)
                     task.spawn(function() callback(current) end)
                 end
                 
-                -- 4. Текстовое поле (Textbox / InputField)
+                -- 4. Текстовое поле (Textbox)
                 function Section:CreateTextbox(textName, placeholder, callback)
                     local TextboxContainer = Instance.new("Frame")
                     TextboxContainer.Name = "TextboxContainer"
-                    TextboxContainer.Size = UDim2.new(1, 0, 0, 44)
+                    TextboxContainer.Size = UDim2.new(1, 0, 0, 42)
                     TextboxContainer.BackgroundTransparency = 1
                     TextboxContainer.Parent = CardFrame
                     
@@ -756,34 +667,31 @@ function Library:Init(config)
                     TextboxLabel.BackgroundTransparency = 1
                     TextboxLabel.Text = textName
                     TextboxLabel.TextColor3 = Theme.TextDim
-                    TextboxLabel.Font = Enum.Font.GothamMedium
-                    TextboxLabel.TextSize = 11
+                    TextboxLabel.Font = Enum.Font.SourceSans
+                    TextboxLabel.TextSize = 13
                     TextboxLabel.TextXAlignment = Enum.TextXAlignment.Left
                     TextboxLabel.Parent = TextboxContainer
                     
                     local InputField = Instance.new("TextBox")
                     InputField.Name = "InputField"
-                    InputField.Size = UDim2.new(1, 0, 0, 24)
+                    InputField.Size = UDim2.new(1, 0, 0, 22)
                     InputField.Position = UDim2.new(0, 0, 0, 18)
-                    InputField.BackgroundColor3 = Theme.StrokeInner
-                    InputField.BorderSizePixel = 0
+                    InputField.BackgroundColor3 = Theme.Background
+                    InputField.BorderSizePixel = 1
+                    InputField.BorderColor3 = Theme.StrokeInner
                     InputField.Text = ""
-                    InputField.PlaceholderText = placeholder or "Введите text..."
+                    InputField.PlaceholderText = placeholder or "Введите текст..."
                     InputField.PlaceholderColor3 = Theme.TextDim
                     InputField.TextColor3 = Theme.Text
-                    InputField.Font = Enum.Font.GothamMedium
-                    InputField.TextSize = 11
+                    InputField.Font = Enum.Font.SourceSans
+                    InputField.TextSize = 13
                     InputField.TextXAlignment = Enum.TextXAlignment.Left
                     InputField.ClearTextOnFocus = false
                     InputField.Parent = TextboxContainer
                     
-                    local InputCorner = Instance.new("UICorner")
-                    InputCorner.CornerRadius = UDim.new(0, 4)
-                    InputCorner.Parent = InputField
-                    
                     local InputPadding = Instance.new("UIPadding")
-                    InputPadding.PaddingLeft = UDim.new(0, 8)
-                    InputPadding.PaddingRight = UDim.new(0, 8)
+                    InputPadding.PaddingLeft = UDim.new(0, 6)
+                    InputPadding.PaddingRight = UDim.new(0, 6)
                     InputPadding.Parent = InputField
                     
                     InputField.FocusLost:Connect(function(enterPressed)
@@ -798,7 +706,7 @@ function Library:Init(config)
                     
                     local DropdownContainer = Instance.new("Frame")
                     DropdownContainer.Name = "DropdownContainer"
-                    DropdownContainer.Size = UDim2.new(1, 0, 0, 44)
+                    DropdownContainer.Size = UDim2.new(1, 0, 0, 42)
                     DropdownContainer.BackgroundTransparency = 1
                     DropdownContainer.Parent = CardFrame
                     
@@ -808,27 +716,24 @@ function Library:Init(config)
                     DropdownLabel.BackgroundTransparency = 1
                     DropdownLabel.Text = dropText
                     DropdownLabel.TextColor3 = Theme.TextDim
-                    DropdownLabel.Font = Enum.Font.GothamMedium
-                    DropdownLabel.TextSize = 11
+                    DropdownLabel.Font = Enum.Font.SourceSans
+                    DropdownLabel.TextSize = 13
                     DropdownLabel.TextXAlignment = Enum.TextXAlignment.Left
                     DropdownLabel.Parent = DropdownContainer
                     
                     local ComboSelector = Instance.new("TextButton")
                     ComboSelector.Name = "ComboSelector"
-                    ComboSelector.Size = UDim2.new(1, 0, 0, 24)
+                    ComboSelector.Size = UDim2.new(1, 0, 0, 22)
                     ComboSelector.Position = UDim2.new(0, 0, 0, 18)
-                    ComboSelector.BackgroundColor3 = Theme.StrokeInner
-                    ComboSelector.BorderSizePixel = 0
+                    ComboSelector.BackgroundColor3 = Theme.Background
+                    ComboSelector.BorderSizePixel = 1
+                    ComboSelector.BorderColor3 = Theme.StrokeInner
                     ComboSelector.Text = "  " .. tostring(current)
                     ComboSelector.TextColor3 = Theme.Text
-                    ComboSelector.Font = Enum.Font.GothamMedium
-                    ComboSelector.TextSize = 11
+                    ComboSelector.Font = Enum.Font.SourceSans
+                    ComboSelector.TextSize = 13
                     ComboSelector.TextXAlignment = Enum.TextXAlignment.Left
                     ComboSelector.Parent = DropdownContainer
-                    
-                    local SelectorCorner = Instance.new("UICorner")
-                    SelectorCorner.CornerRadius = UDim.new(0, 4)
-                    SelectorCorner.Parent = ComboSelector
                     
                     local Arrow = Instance.new("TextLabel")
                     Arrow.Name = "Arrow"
@@ -837,16 +742,17 @@ function Library:Init(config)
                     Arrow.BackgroundTransparency = 1
                     Arrow.Text = "▼"
                     Arrow.TextColor3 = Theme.TextDim
-                    Arrow.Font = Enum.Font.Gotham
-                    Arrow.TextSize = 8
+                    Arrow.Font = Enum.Font.SourceSans
+                    Arrow.TextSize = 11
                     Arrow.Parent = ComboSelector
                     
                     local SelectionList = Instance.new("ScrollingFrame")
                     SelectionList.Name = "SelectionList"
                     SelectionList.Size = UDim2.new(1, 0, 0, 0)
                     SelectionList.Position = UDim2.new(0, 0, 1, 2)
-                    SelectionList.BackgroundColor3 = Theme.Card
-                    SelectionList.BorderSizePixel = 0
+                    SelectionList.BackgroundColor3 = Theme.Background
+                    SelectionList.BorderSizePixel = 1
+                    SelectionList.BorderColor3 = Theme.StrokeOuter
                     SelectionList.ZIndex = 5
                     SelectionList.Visible = false
                     SelectionList.ScrollBarThickness = 2
@@ -857,15 +763,6 @@ function Library:Init(config)
                     ListLayout.Parent = SelectionList
                     ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
                     
-                    local SelectionCorner = Instance.new("UICorner")
-                    SelectionCorner.CornerRadius = UDim.new(0, 4)
-                    SelectionCorner.Parent = SelectionList
-                    
-                    local SelectionStroke = Instance.new("UIStroke")
-                    SelectionStroke.Color = Theme.StrokeInner
-                    SelectionStroke.Thickness = 1
-                    SelectionStroke.Parent = SelectionList
-                    
                     local function toggleDropdown()
                         open = not open
                         Arrow.Text = open and "▲" or "▼"
@@ -874,9 +771,9 @@ function Library:Init(config)
                             local size = math.min(#list * 22, 88)
                             SelectionList.Size = UDim2.new(1, 0, 0, size)
                             SelectionList.CanvasSize = UDim2.new(0, 0, 0, #list * 22)
-                            DropdownContainer.Size = UDim2.new(1, 0, 0, 44 + size)
+                            DropdownContainer.Size = UDim2.new(1, 0, 0, 42 + size)
                         else
-                            DropdownContainer.Size = UDim2.new(1, 0, 0, 44)
+                            DropdownContainer.Size = UDim2.new(1, 0, 0, 42)
                         end
                         resizeCard()
                     end
@@ -887,21 +784,23 @@ function Library:Init(config)
                         local OptionBtn = Instance.new("TextButton")
                         OptionBtn.Name = "OptionBtn"
                         OptionBtn.Size = UDim2.new(1, 0, 0, 22)
-                        OptionBtn.BackgroundColor3 = Theme.Card
+                        OptionBtn.BackgroundColor3 = Theme.Background
                         OptionBtn.BorderSizePixel = 0
                         OptionBtn.Text = "  " .. tostring(option)
                         OptionBtn.TextColor3 = Theme.TextDim
-                        OptionBtn.Font = Enum.Font.GothamMedium
-                        OptionBtn.TextSize = 10
+                        OptionBtn.Font = Enum.Font.SourceSans
+                        OptionBtn.TextSize = 13
                         OptionBtn.TextXAlignment = Enum.TextXAlignment.Left
                         OptionBtn.ZIndex = 6
                         OptionBtn.Parent = SelectionList
                         
                         OptionBtn.MouseEnter:Connect(function()
-                            tween(OptionBtn, 0.1, {BackgroundColor3 = Theme.StrokeInner, TextColor3 = Theme.Text})
+                            OptionBtn.BackgroundColor3 = Theme.StrokeInner
+                            OptionBtn.TextColor3 = Theme.Text
                         end)
                         OptionBtn.MouseLeave:Connect(function()
-                            tween(OptionBtn, 0.1, {BackgroundColor3 = Theme.Card, TextColor3 = Theme.TextDim})
+                            OptionBtn.BackgroundColor3 = Theme.Background
+                            OptionBtn.TextColor3 = Theme.TextDim
                         end)
                         
                         OptionBtn.MouseButton1Click:Connect(function()
@@ -915,13 +814,13 @@ function Library:Init(config)
                     task.spawn(function() callback(current) end)
                 end
                 
-                -- 6. Клавиша бинда (Keybind)
+                -- 6. Хоткей биндер (Keybind - маленькие скобки [Key] в углу)
                 function Section:CreateKeybind(bindText, default, callback)
                     local currentKey = default
                     
                     local KeybindContainer = Instance.new("Frame")
                     KeybindContainer.Name = "KeybindContainer"
-                    KeybindContainer.Size = UDim2.new(1, 0, 0, 26)
+                    KeybindContainer.Size = UDim2.new(1, 0, 0, 22)
                     KeybindContainer.BackgroundTransparency = 1
                     KeybindContainer.Parent = CardFrame
                     
@@ -931,30 +830,28 @@ function Library:Init(config)
                     KeybindLabel.BackgroundTransparency = 1
                     KeybindLabel.Text = bindText
                     KeybindLabel.TextColor3 = Theme.TextDim
-                    KeybindLabel.Font = Enum.Font.GothamMedium
-                    KeybindLabel.TextSize = 12
+                    KeybindLabel.Font = Enum.Font.SourceSans
+                    KeybindLabel.TextSize = 13
                     KeybindLabel.TextXAlignment = Enum.TextXAlignment.Left
                     KeybindLabel.Parent = KeybindContainer
                     
                     local ShortcutButton = Instance.new("TextButton")
                     ShortcutButton.Name = "ShortcutButton"
-                    ShortcutButton.Size = UDim2.new(0.35, 0, 0.8, 0)
-                    ShortcutButton.Position = UDim2.new(0.65, 0, 0.1, 0)
-                    ShortcutButton.BackgroundColor3 = Theme.StrokeInner
-                    ShortcutButton.Text = currentKey and currentKey.Name or "[ NONE ]"
+                    ShortcutButton.Size = UDim2.new(0.35, 0, 0.9, 0)
+                    ShortcutButton.Position = UDim2.new(0.65, 0, 0.05, 0)
+                    ShortcutButton.BackgroundColor3 = Theme.Background
+                    ShortcutButton.BorderSizePixel = 1
+                    ShortcutButton.BorderColor3 = Theme.StrokeInner
+                    ShortcutButton.Text = currentKey and ("[" .. currentKey.Name .. "]") or "[ NONE ]"
                     ShortcutButton.TextColor3 = Theme.Text
-                    ShortcutButton.Font = Enum.Font.GothamBold
-                    ShortcutButton.TextSize = 10
+                    ShortcutButton.Font = Enum.Font.SourceSansBold
+                    ShortcutButton.TextSize = 12
                     ShortcutButton.Parent = KeybindContainer
-                    
-                    local ShortcutCorner = Instance.new("UICorner")
-                    ShortcutCorner.CornerRadius = UDim.new(0, 4)
-                    ShortcutCorner.Parent = ShortcutButton
                     
                     local binding = false
                     ShortcutButton.MouseButton1Click:Connect(function()
                         binding = true
-                        ShortcutButton.Text = "... БИНД"
+                        ShortcutButton.Text = "[ ... ]"
                         ShortcutButton.TextColor3 = Theme.Accent
                     end)
                     
@@ -963,7 +860,7 @@ function Library:Init(config)
                             if input.UserInputType == Enum.UserInputType.Keyboard then
                                 binding = false
                                 currentKey = input.KeyCode
-                                ShortcutButton.Text = currentKey.Name
+                                ShortcutButton.Text = "[" .. currentKey.Name .. "]"
                                 ShortcutButton.TextColor3 = Theme.Text
                                 callback(currentKey)
                             end
@@ -981,7 +878,7 @@ function Library:Init(config)
             return TabController
         end
         
-        UI:Notify("deadhub loaded", "Horizontal navigation menu successfully loaded!", 4)
+        UI:Notify("deadhub loaded", "SourceSans UI successfully loaded!", 3)
         
         return UI
     end
