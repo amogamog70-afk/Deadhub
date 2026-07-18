@@ -1,4 +1,4 @@
--- [[ deadhub UI Library — Red-Black-Gray Wide Edition ]] --
+-- [[ deadhub UI Library — Red-Black-Gray Wide Horizontal Edition ]] --
 -- Все функции и переменные локальны для обхода getgc()
 -- Названия объектов замаскированы под легальные элементы Trident (InventoryFrame, SettingsButton)
 
@@ -42,15 +42,15 @@ end
 
 -- Цветовая схема: Красно-Черно-Серый акцент
 local Theme = {
-    Background = Color3.fromRGB(10, 10, 10),    -- Глубокий черный
-    Header = Color3.fromRGB(18, 18, 18),        -- Темно-серый для хедера и сайдбара
-    Card = Color3.fromRGB(15, 15, 15),          -- Черные карточки для секций
-    Stroke = Color3.fromRGB(30, 30, 30),        -- Темно-серые границы
-    Accent = Color3.fromRGB(229, 9, 20),         -- Яркий красный (Netflix/Skeet Red)
-    AccentDim = Color3.fromRGB(150, 5, 10),     -- Темно-красный для затуханий
-    Text = Color3.fromRGB(255, 255, 255),       -- Чистый белый
-    TextDim = Color3.fromRGB(150, 150, 150),    -- Приглушенный серый
-    Red = Color3.fromRGB(229, 9, 20)
+    Background = Color3.fromRGB(8, 8, 8),       -- Глубокий черный
+    Header = Color3.fromRGB(14, 14, 14),        -- Темно-серый
+    Card = Color3.fromRGB(12, 12, 12),          -- Черные карточки
+    StrokeOuter = Color3.fromRGB(229, 9, 20),   -- Красная внешняя обводка
+    StrokeInner = Color3.fromRGB(25, 25, 25),   -- Темно-серая внутренняя обводка
+    Accent = Color3.fromRGB(229, 9, 20),        -- Яркий красный
+    AccentDim = Color3.fromRGB(140, 5, 10),     -- Темно-красный
+    Text = Color3.fromRGB(255, 255, 255),       -- Белый
+    TextDim = Color3.fromRGB(140, 140, 140)     -- Серый
 }
 
 -- Вспомогательная функция анимаций
@@ -169,7 +169,7 @@ function Library:Init(config)
         pcall(function()
             StarterGui:SetCore("SendNotification", {
                 Title = "deadhub stealth",
-                Text = "Bypassed GUI creation. Use registered hotkeys.",
+                Text = "Bypassed GUI. Use registered hotkeys.",
                 Duration = 4
             })
         end)
@@ -177,7 +177,7 @@ function Library:Init(config)
         return DummyWindow
     else
         -- ==========================================
-        -- ШИРОКИЙ GUI РЕЖИМ (КРАСНО-ЧЕРНО-СЕРЫЙ)
+        -- ШИРОКИЙ GUI РЕЖИМ (КРАСНО-ЧЕРНО-СЕРЫЙ С ВЕРХНИМ МЕНЮ)
         -- ==========================================
         local UI = {
             CurrentTab = nil,
@@ -195,37 +195,57 @@ function Library:Init(config)
         ScreenGui.IgnoreGuiInset = true
         ScreenGui.Parent = ParentContainer
         
-        -- Широкое главное окно (700 x 450)
+        -- Главное окно увеличено до 780x500
         local InventoryFrame = Instance.new("Frame")
         InventoryFrame.Name = "InventoryFrame"
-        InventoryFrame.Size = UDim2.new(0, 700, 0, 450)
-        InventoryFrame.Position = UDim2.new(0.5, -350, 0.5, -225)
+        InventoryFrame.Size = UDim2.new(0, 780, 0, 500)
+        InventoryFrame.Position = UDim2.new(0.5, -390, 0.5, -250)
         InventoryFrame.BackgroundColor3 = Theme.Background
         InventoryFrame.BorderSizePixel = 0
         InventoryFrame.Active = true
         InventoryFrame.Parent = ScreenGui
         
         local InventoryFrameCorner = Instance.new("UICorner")
-        InventoryFrameCorner.CornerRadius = UDim.new(0, 8)
+        InventoryFrameCorner.CornerRadius = UDim.new(0, 6)
         InventoryFrameCorner.Parent = InventoryFrame
         
+        -- Красная внешняя обводка
         local InventoryFrameStroke = Instance.new("UIStroke")
-        InventoryFrameStroke.Color = Theme.Stroke
-        InventoryFrameStroke.Thickness = 1.5
+        InventoryFrameStroke.Color = Theme.StrokeOuter
+        InventoryFrameStroke.Thickness = 1.8
         InventoryFrameStroke.Parent = InventoryFrame
         
-        -- Хедер
+        -- Внутренний контейнер для эффекта двойной обводки
+        local InnerContainer = Instance.new("Frame")
+        InnerContainer.Name = "InnerContainer"
+        InnerContainer.Size = UDim2.new(1, -6, 1, -6)
+        InnerContainer.Position = UDim2.new(0, 3, 0, 3)
+        InnerContainer.BackgroundColor3 = Theme.Background
+        InnerContainer.BorderSizePixel = 0
+        InnerContainer.Parent = InventoryFrame
+        
+        local InnerCorner = Instance.new("UICorner")
+        InnerCorner.CornerRadius = UDim.new(0, 4)
+        InnerCorner.Parent = InnerContainer
+        
+        local InnerStroke = Instance.new("UIStroke")
+        InnerStroke.Color = Theme.StrokeInner
+        InnerStroke.Thickness = 1.2
+        InnerStroke.Parent = InnerContainer
+        
+        -- Верхний хедер
         local HeaderFrame = Instance.new("Frame")
         HeaderFrame.Name = "HeaderFrame"
-        HeaderFrame.Size = UDim2.new(1, 0, 0, 45)
+        HeaderFrame.Size = UDim2.new(1, 0, 0, 82)
         HeaderFrame.BackgroundColor3 = Theme.Header
         HeaderFrame.BorderSizePixel = 0
-        HeaderFrame.Parent = InventoryFrame
+        HeaderFrame.Parent = InnerContainer
         
         local HeaderFrameCorner = Instance.new("UICorner")
-        HeaderFrameCorner.CornerRadius = UDim.new(0, 8)
+        HeaderFrameCorner.CornerRadius = UDim.new(0, 4)
         HeaderFrameCorner.Parent = HeaderFrame
         
+        -- Скрытие нижних закруглений у хедера
         local HeaderFix = Instance.new("Frame")
         HeaderFix.Name = "HeaderFix"
         HeaderFix.Size = UDim2.new(1, 0, 0, 10)
@@ -234,44 +254,29 @@ function Library:Init(config)
         HeaderFix.BorderSizePixel = 0
         HeaderFix.Parent = HeaderFrame
         
-        local HeaderStrokeFix = Instance.new("Frame")
-        HeaderStrokeFix.Name = "HeaderStrokeFix"
-        HeaderStrokeFix.Size = UDim2.new(1, 0, 0, 1)
-        HeaderStrokeFix.Position = UDim2.new(0, 0, 1, 0)
-        HeaderStrokeFix.BackgroundColor3 = Theme.Stroke
-        HeaderStrokeFix.BorderSizePixel = 0
-        HeaderStrokeFix.Parent = HeaderFrame
-        
-        -- Полоска акцента на хедере (Красная линия)
-        local AccentLine = Instance.new("Frame")
-        AccentLine.Name = "AccentLine"
-        AccentLine.Size = UDim2.new(1, 0, 0, 2)
-        AccentLine.Position = UDim2.new(0, 0, 1, 0)
-        AccentLine.BackgroundColor3 = Theme.Accent
-        AccentLine.BorderSizePixel = 0
-        AccentLine.Parent = HeaderFrame
-        
+        -- Название по центру
         local TitleLabel = Instance.new("TextLabel")
         TitleLabel.Name = "TitleLabel"
-        TitleLabel.Size = UDim2.new(0, 250, 1, 0)
-        TitleLabel.Position = UDim2.new(0, 16, 0, 0)
+        TitleLabel.Size = UDim2.new(0, 300, 0, 30)
+        TitleLabel.Position = UDim2.new(0.5, -150, 0, 8)
         TitleLabel.BackgroundTransparency = 1
         TitleLabel.Text = "deadhub"
         TitleLabel.TextColor3 = Theme.Accent
         TitleLabel.Font = Enum.Font.GothamBold
-        TitleLabel.TextSize = 18
-        TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+        TitleLabel.TextSize = 20
+        TitleLabel.TextAlignment = Enum.TextAlignment.Center
         TitleLabel.Parent = HeaderFrame
         
+        -- Кнопка закрытия справа вверху
         local CloseButton = Instance.new("TextButton")
         CloseButton.Name = "CloseButton"
-        CloseButton.Size = UDim2.new(0, 30, 0, 30)
-        CloseButton.Position = UDim2.new(1, -38, 0.5, -15)
+        CloseButton.Size = UDim2.new(0, 24, 0, 24)
+        CloseButton.Position = UDim2.new(1, -30, 0, 8)
         CloseButton.BackgroundTransparency = 1
         CloseButton.Text = "×"
         CloseButton.TextColor3 = Theme.TextDim
         CloseButton.Font = Enum.Font.GothamBold
-        CloseButton.TextSize = 24
+        CloseButton.TextSize = 22
         CloseButton.Parent = HeaderFrame
         
         CloseButton.MouseEnter:Connect(function() tween(CloseButton, 0.15, {TextColor3 = Theme.Accent}) end)
@@ -283,59 +288,41 @@ function Library:Init(config)
         
         makeDraggable(InventoryFrame, HeaderFrame)
         
-        -- Боковое меню вкладок (Сайдбар)
-        local SidebarFrame = Instance.new("Frame")
-        SidebarFrame.Name = "SidebarFrame"
-        SidebarFrame.Size = UDim2.new(0, 150, 1, -47)
-        SidebarFrame.Position = UDim2.new(0, 0, 0, 47)
-        SidebarFrame.BackgroundColor3 = Theme.Header
-        SidebarFrame.BorderSizePixel = 0
-        SidebarFrame.Parent = InventoryFrame
-        
-        local SidebarFrameCorner = Instance.new("UICorner")
-        SidebarFrameCorner.CornerRadius = UDim.new(0, 8)
-        SidebarFrameCorner.Parent = SidebarFrame
-        
-        local SidebarFix = Instance.new("Frame")
-        SidebarFix.Name = "SidebarFix"
-        SidebarFix.Size = UDim2.new(0, 10, 1, 0)
-        SidebarFix.Position = UDim2.new(1, -10, 0, 0)
-        SidebarFix.BackgroundColor3 = Theme.Header
-        SidebarFix.BorderSizePixel = 0
-        SidebarFix.Parent = SidebarFrame
-        
-        local SidebarStrokeFix = Instance.new("Frame")
-        SidebarStrokeFix.Name = "SidebarStrokeFix"
-        SidebarStrokeFix.Size = UDim2.new(0, 1, 1, 0)
-        SidebarStrokeFix.Position = UDim2.new(1, 0, 0, 0)
-        SidebarStrokeFix.BackgroundColor3 = Theme.Stroke
-        SidebarStrokeFix.BorderSizePixel = 0
-        SidebarStrokeFix.Parent = SidebarFrame
-        
+        -- Горизонтальный контейнер вкладок снизу под названием
         local TabButtonContainer = Instance.new("ScrollingFrame")
         TabButtonContainer.Name = "TabButtonContainer"
-        TabButtonContainer.Size = UDim2.new(1, -10, 1, -10)
-        TabButtonContainer.Position = UDim2.new(0, 5, 0, 5)
+        TabButtonContainer.Size = UDim2.new(1, -30, 0, 32)
+        TabButtonContainer.Position = UDim2.new(0, 15, 0, 42)
         TabButtonContainer.BackgroundTransparency = 1
         TabButtonContainer.BorderSizePixel = 0
         TabButtonContainer.ScrollBarThickness = 0
         TabButtonContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
-        TabButtonContainer.Parent = SidebarFrame
+        TabButtonContainer.Parent = HeaderFrame
         
         local TabListLayout = Instance.new("UIListLayout")
         TabListLayout.Parent = TabButtonContainer
         TabListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-        TabListLayout.Padding = UDim.new(0, 4)
+        TabListLayout.FillDirection = Enum.FillDirection.Horizontal
+        TabListLayout.Padding = UDim.new(0, 12)
         
-        -- Страницы контейнеры
+        -- Полоска акцента на границе хедера
+        local AccentLine = Instance.new("Frame")
+        AccentLine.Name = "AccentLine"
+        AccentLine.Size = UDim2.new(1, 0, 0, 1)
+        AccentLine.Position = UDim2.new(0, 0, 1, 0)
+        AccentLine.BackgroundColor3 = Theme.StrokeInner
+        AccentLine.BorderSizePixel = 0
+        AccentLine.Parent = HeaderFrame
+        
+        -- Контейнер для страниц
         local PageList = Instance.new("Frame")
         PageList.Name = "PageList"
-        PageList.Size = UDim2.new(1, -165, 1, -60)
-        PageList.Position = UDim2.new(0, 160, 0, 55)
+        PageList.Size = UDim2.new(1, -24, 1, -96)
+        PageList.Position = UDim2.new(0, 12, 0, 90)
         PageList.BackgroundTransparency = 1
-        PageList.Parent = InventoryFrame
+        PageList.Parent = InnerContainer
         
-        -- Сворачивание на кнопку
+        -- Сворачивание
         UserInputService.InputBegan:Connect(function(input, gp)
             if gp then return end
             if input.KeyCode == toggleKey then
@@ -360,7 +347,7 @@ function Library:Init(config)
             ToastCorner.Parent = Toast
             
             local ToastStroke = Instance.new("UIStroke")
-            ToastStroke.Color = Theme.Stroke
+            ToastStroke.Color = Theme.StrokeOuter
             ToastStroke.Thickness = 1.2
             ToastStroke.Parent = Toast
             
@@ -409,50 +396,74 @@ function Library:Init(config)
         
         -- Создание Вкладки
         function UI:CreateTab(tabName)
-            local Tab = { Selected = false, CategoryButton = nil, SubFrame = nil }
+            local Tab = { Selected = false, CategoryButton = nil, SubFrame = nil, SectionsCount = 0 }
             
+            -- Кнопка вкладки
             local CategoryButton = Instance.new("TextButton")
             CategoryButton.Name = "CategoryButton"
-            CategoryButton.Size = UDim2.new(1, 0, 0, 32)
+            CategoryButton.Size = UDim2.new(0, 95, 1, 0)
             CategoryButton.BackgroundTransparency = 1
-            CategoryButton.Text = "  " .. tabName
+            CategoryButton.Text = tabName
             CategoryButton.TextColor3 = Theme.TextDim
             CategoryButton.Font = Enum.Font.GothamBold
             CategoryButton.TextSize = 12
-            CategoryButton.TextXAlignment = Enum.TextXAlignment.Left
             CategoryButton.Parent = TabButtonContainer
             
-            local CategoryCorner = Instance.new("UICorner")
-            CategoryCorner.CornerRadius = UDim.new(0, 4)
-            CategoryCorner.Parent = CategoryButton
+            local Underline = Instance.new("Frame")
+            Underline.Name = "Underline"
+            Underline.Size = UDim2.new(0.6, 0, 0, 2)
+            Underline.Position = UDim2.new(0.2, 0, 1, -2)
+            Underline.BackgroundColor3 = Theme.Accent
+            Underline.BorderSizePixel = 0
+            Underline.BackgroundTransparency = 1
+            Underline.Parent = CategoryButton
             
-            -- Скролл колонка страницы
+            -- Двухколонный макет для размещения карточек секций
             local SubFrame = Instance.new("ScrollingFrame")
             SubFrame.Name = "SubFrame"
             SubFrame.Size = UDim2.new(1, 0, 1, 0)
             SubFrame.BackgroundTransparency = 1
             SubFrame.BorderSizePixel = 0
             SubFrame.ScrollBarThickness = 2
-            SubFrame.ScrollBarImageColor3 = Theme.Stroke
+            SubFrame.ScrollBarImageColor3 = Theme.StrokeInner
             SubFrame.Visible = false
             SubFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
             SubFrame.Parent = PageList
             
-            local SubLayout = Instance.new("UIListLayout")
-            SubLayout.Parent = SubFrame
-            SubLayout.SortOrder = Enum.SortOrder.LayoutOrder
-            SubLayout.Padding = UDim.new(0, 10)
+            -- Левая колонка
+            local LeftColumn = Instance.new("Frame")
+            LeftColumn.Name = "LeftColumn"
+            LeftColumn.Size = UDim2.new(0.5, -6, 1, 0)
+            LeftColumn.BackgroundTransparency = 1
+            LeftColumn.Parent = SubFrame
             
-            local SubPadding = Instance.new("UIPadding")
-            SubPadding.PaddingLeft = UDim.new(0, 2)
-            SubPadding.PaddingRight = UDim.new(0, 8)
-            SubPadding.PaddingTop = UDim.new(0, 2)
-            SubPadding.PaddingBottom = UDim.new(0, 10)
-            SubPadding.Parent = SubFrame
+            local LeftLayout = Instance.new("UIListLayout")
+            LeftLayout.Parent = LeftColumn
+            LeftLayout.SortOrder = Enum.SortOrder.LayoutOrder
+            LeftLayout.Padding = UDim.new(0, 12)
             
-            SubLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-                SubFrame.CanvasSize = UDim2.new(0, 0, 0, SubLayout.AbsoluteContentSize.Y + 15)
-            end)
+            -- Правая колонка
+            local RightColumn = Instance.new("Frame")
+            RightColumn.Name = "RightColumn"
+            RightColumn.Size = UDim2.new(0.5, -6, 1, 0)
+            RightColumn.Position = UDim2.new(0.5, 6, 0, 0)
+            RightColumn.BackgroundTransparency = 1
+            RightColumn.Parent = SubFrame
+            
+            local RightLayout = Instance.new("UIListLayout")
+            RightLayout.Parent = RightColumn
+            RightLayout.SortOrder = Enum.SortOrder.LayoutOrder
+            RightLayout.Padding = UDim.new(0, 12)
+            
+            -- Автоматический скролл по высоте контента
+            local function updateScroll()
+                local leftHeight = LeftLayout.AbsoluteContentSize.Y
+                local rightHeight = RightLayout.AbsoluteContentSize.Y
+                local maxHeight = math.max(leftHeight, rightHeight)
+                SubFrame.CanvasSize = UDim2.new(0, 0, 0, maxHeight + 20)
+            end
+            LeftLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateScroll)
+            RightLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateScroll)
             
             Tab.CategoryButton = CategoryButton
             Tab.SubFrame = SubFrame
@@ -461,12 +472,13 @@ function Library:Init(config)
                 for _, otherTab in ipairs(UI.Tabs) do
                     otherTab.Selected = false
                     otherTab.SubFrame.Visible = false
-                    tween(otherTab.CategoryButton, 0.15, {BackgroundTransparency = 1, TextColor3 = Theme.TextDim})
+                    tween(otherTab.CategoryButton, 0.15, {TextColor3 = Theme.TextDim})
+                    tween(otherTab.CategoryButton.Underline, 0.15, {BackgroundTransparency = 1})
                 end
                 Tab.Selected = true
                 SubFrame.Visible = true
-                tween(CategoryButton, 0.15, {BackgroundTransparency = 0.85, TextColor3 = Theme.Accent})
-                CategoryButton.BackgroundColor3 = Theme.Accent
+                tween(CategoryButton, 0.15, {TextColor3 = Theme.Text})
+                tween(Underline, 0.15, {BackgroundTransparency = 0})
             end
             
             CategoryButton.MouseButton1Click:Connect(select)
@@ -474,10 +486,14 @@ function Library:Init(config)
             
             if #UI.Tabs == 1 then select() end
             
-            -- Секция
             local TabController = {}
             
+            -- Создание Секции
             function TabController:CreateSection(secName)
+                Tab.SectionsCount = Tab.SectionsCount + 1
+                
+                local targetColumn = (Tab.SectionsCount % 2 == 1) and LeftColumn or RightColumn
+                
                 local Section = {}
                 
                 local CardFrame = Instance.new("Frame")
@@ -485,14 +501,14 @@ function Library:Init(config)
                 CardFrame.Size = UDim2.new(1, 0, 0, 30)
                 CardFrame.BackgroundColor3 = Theme.Card
                 CardFrame.BorderSizePixel = 0
-                CardFrame.Parent = SubFrame
+                CardFrame.Parent = targetColumn
                 
                 local CardCorner = Instance.new("UICorner")
-                CardCorner.CornerRadius = UDim.new(0, 6)
+                CardCorner.CornerRadius = UDim.new(0, 4)
                 CardCorner.Parent = CardFrame
                 
                 local CardStroke = Instance.new("UIStroke")
-                CardStroke.Color = Theme.Stroke
+                CardStroke.Color = Theme.StrokeInner
                 CardStroke.Thickness = 1
                 CardStroke.Parent = CardFrame
                 
@@ -533,7 +549,7 @@ function Library:Init(config)
                     local ActionButton = Instance.new("TextButton")
                     ActionButton.Name = "ActionButton"
                     ActionButton.Size = UDim2.new(1, 0, 0, 28)
-                    ActionButton.BackgroundColor3 = Theme.Stroke
+                    ActionButton.BackgroundColor3 = Theme.StrokeInner
                     ActionButton.Text = btnText
                     ActionButton.TextColor3 = Theme.Text
                     ActionButton.Font = Enum.Font.GothamMedium
@@ -544,11 +560,16 @@ function Library:Init(config)
                     ActionCorner.CornerRadius = UDim.new(0, 4)
                     ActionCorner.Parent = ActionButton
                     
+                    local ActionStroke = Instance.new("UIStroke")
+                    ActionStroke.Color = Theme.StrokeInner
+                    ActionStroke.Thickness = 0.8
+                    ActionStroke.Parent = ActionButton
+                    
                     ActionButton.MouseEnter:Connect(function()
                         tween(ActionButton, 0.15, {BackgroundColor3 = Theme.Accent})
                     end)
                     ActionButton.MouseLeave:Connect(function()
-                        tween(ActionButton, 0.15, {BackgroundColor3 = Theme.Stroke})
+                        tween(ActionButton, 0.15, {BackgroundColor3 = Theme.StrokeInner})
                     end)
                     ActionButton.MouseButton1Click:Connect(callback)
                     
@@ -587,7 +608,7 @@ function Library:Init(config)
                     StatusIndicator.Name = "StatusIndicator"
                     StatusIndicator.Size = UDim2.new(0, 32, 0, 16)
                     StatusIndicator.Position = UDim2.new(1, -32, 0.5, -8)
-                    StatusIndicator.BackgroundColor3 = state and Theme.Accent or Theme.Stroke
+                    StatusIndicator.BackgroundColor3 = state and Theme.Accent or Theme.StrokeInner
                     StatusIndicator.BorderSizePixel = 0
                     StatusIndicator.Parent = SettingsButton
                     
@@ -608,7 +629,7 @@ function Library:Init(config)
                     DotCorner.Parent = SliderDot
                     
                     local function update()
-                        tween(StatusIndicator, 0.15, {BackgroundColor3 = state and Theme.Accent or Theme.Stroke})
+                        tween(StatusIndicator, 0.15, {BackgroundColor3 = state and Theme.Accent or Theme.StrokeInner})
                         tween(SliderDot, 0.15, {Position = UDim2.new(0, state and 18 or 2, 0.5, -6)})
                         tween(ToggleLabel, 0.15, {TextColor3 = state and Theme.Text or Theme.TextDim})
                         callback(state)
@@ -670,7 +691,7 @@ function Library:Init(config)
                     Track.Name = "Track"
                     Track.Size = UDim2.new(1, 0, 0, 6)
                     Track.Position = UDim2.new(0, 0, 0.7, 0)
-                    Track.BackgroundColor3 = Theme.Stroke
+                    Track.BackgroundColor3 = Theme.StrokeInner
                     Track.BorderSizePixel = 0
                     Track.Text = ""
                     Track.Parent = SliderContainer
@@ -744,10 +765,10 @@ function Library:Init(config)
                     InputField.Name = "InputField"
                     InputField.Size = UDim2.new(1, 0, 0, 24)
                     InputField.Position = UDim2.new(0, 0, 0, 18)
-                    InputField.BackgroundColor3 = Theme.Stroke
+                    InputField.BackgroundColor3 = Theme.StrokeInner
                     InputField.BorderSizePixel = 0
                     InputField.Text = ""
-                    InputField.PlaceholderText = placeholder or "Введите текст..."
+                    InputField.PlaceholderText = placeholder or "Введите text..."
                     InputField.PlaceholderColor3 = Theme.TextDim
                     InputField.TextColor3 = Theme.Text
                     InputField.Font = Enum.Font.GothamMedium
@@ -796,7 +817,7 @@ function Library:Init(config)
                     ComboSelector.Name = "ComboSelector"
                     ComboSelector.Size = UDim2.new(1, 0, 0, 24)
                     ComboSelector.Position = UDim2.new(0, 0, 0, 18)
-                    ComboSelector.BackgroundColor3 = Theme.Stroke
+                    ComboSelector.BackgroundColor3 = Theme.StrokeInner
                     ComboSelector.BorderSizePixel = 0
                     ComboSelector.Text = "  " .. tostring(current)
                     ComboSelector.TextColor3 = Theme.Text
@@ -829,7 +850,7 @@ function Library:Init(config)
                     SelectionList.ZIndex = 5
                     SelectionList.Visible = false
                     SelectionList.ScrollBarThickness = 2
-                    SelectionList.ScrollBarImageColor3 = Theme.Stroke
+                    SelectionList.ScrollBarImageColor3 = Theme.StrokeInner
                     SelectionList.Parent = ComboSelector
                     
                     local ListLayout = Instance.new("UIListLayout")
@@ -841,7 +862,7 @@ function Library:Init(config)
                     SelectionCorner.Parent = SelectionList
                     
                     local SelectionStroke = Instance.new("UIStroke")
-                    SelectionStroke.Color = Theme.Stroke
+                    SelectionStroke.Color = Theme.StrokeInner
                     SelectionStroke.Thickness = 1
                     SelectionStroke.Parent = SelectionList
                     
@@ -877,7 +898,7 @@ function Library:Init(config)
                         OptionBtn.Parent = SelectionList
                         
                         OptionBtn.MouseEnter:Connect(function()
-                            tween(OptionBtn, 0.1, {BackgroundColor3 = Theme.Stroke, TextColor3 = Theme.Text})
+                            tween(OptionBtn, 0.1, {BackgroundColor3 = Theme.StrokeInner, TextColor3 = Theme.Text})
                         end)
                         OptionBtn.MouseLeave:Connect(function()
                             tween(OptionBtn, 0.1, {BackgroundColor3 = Theme.Card, TextColor3 = Theme.TextDim})
@@ -919,7 +940,7 @@ function Library:Init(config)
                     ShortcutButton.Name = "ShortcutButton"
                     ShortcutButton.Size = UDim2.new(0.35, 0, 0.8, 0)
                     ShortcutButton.Position = UDim2.new(0.65, 0, 0.1, 0)
-                    ShortcutButton.BackgroundColor3 = Theme.Stroke
+                    ShortcutButton.BackgroundColor3 = Theme.StrokeInner
                     ShortcutButton.Text = currentKey and currentKey.Name or "[ NONE ]"
                     ShortcutButton.TextColor3 = Theme.Text
                     ShortcutButton.Font = Enum.Font.GothamBold
@@ -960,7 +981,7 @@ function Library:Init(config)
             return TabController
         end
         
-        UI:Notify("deadhub loaded", "Stealth bypass GUI has been injected successfully!", 4)
+        UI:Notify("deadhub loaded", "Horizontal navigation menu successfully loaded!", 4)
         
         return UI
     end
